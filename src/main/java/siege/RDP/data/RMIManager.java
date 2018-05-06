@@ -16,7 +16,7 @@ import siege.RDP.config.RemoteConfig;
 import siege.RDP.node.IUpdatableNode;
 import siege.RDP.registrar.IRDPRepository;
 import siege.RDP.registrar.IRDPService;
-import siege.RDP.registrar.ISegmentIDGenerator;
+import siege.RDP.registrar.IIDGenerationService;
 
 @Singleton
 public class RMIManager {
@@ -89,9 +89,9 @@ public class RMIManager {
 		return rdpService;
 	}
 
-	public ISegmentIDGenerator getIDGen() {
+	public IIDGenerationService getIDGen() {
 
-		ISegmentIDGenerator rdpService = null;
+		IIDGenerationService rdpService = null;
 		try {
 			Registry r = remotes.get(remote_cfg.REGISTRATION_MASTER);
 			if (r == null) {
@@ -99,7 +99,7 @@ public class RMIManager {
 				remotes.put(remote_cfg.REGISTRATION_MASTER, r);
 			}
 			Remote obj = r.lookup(remote_cfg.RMI_IDGEN);
-			rdpService = (ISegmentIDGenerator) obj;
+			rdpService = (IIDGenerationService) obj;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -162,7 +162,7 @@ public class RMIManager {
 		
 	}
 	
-	public void RegisterIDGenerator( ISegmentIDGenerator obj) {
+	public void RegisterIDGenerator( IIDGenerationService obj) {
 		Registry r = null;
 		try {
 			r = getLocalRegistry();

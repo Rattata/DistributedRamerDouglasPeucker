@@ -15,10 +15,10 @@ public class RegistrarRunner implements Runnable {
 	RMIManager rmiMan;
 	IRDPRepository repo;
 	RemoteConfig remote_config;
-	ISegmentIDGenerator idGen;
+	IIDGenerationService idGen;
 	
 	@Inject
-	public RegistrarRunner(ResultConsumer consumer, @Named("Segment") ISegmentIDGenerator idGen, RemoteConfig remote_config, IRDPService service, RMIManager rmiMan, IRDPRepository repo) {
+	public RegistrarRunner(ResultConsumer consumer, @Named("Segment") IIDGenerationService idGen, RemoteConfig remote_config, IRDPService service, RMIManager rmiMan, IRDPRepository repo) {
 		this.consumer = consumer;
 		this.service = service;
 		this.rmiMan = rmiMan;

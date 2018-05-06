@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class IdentityGenerator extends UnicastRemoteObject implements ISegmentIDGenerator {
+public class IdentityGenerator extends UnicastRemoteObject implements IIDGenerationService {
 
 	public IdentityGenerator() throws RemoteException {
 	}

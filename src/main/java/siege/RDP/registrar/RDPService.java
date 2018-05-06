@@ -22,14 +22,14 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 	
 	private IRDPRepository repo;
 	private IMessagingFactory messFact;
-	private ISegmentIDGenerator idGen;
+	private IIDGenerationService idGen;
 	private MessageProducer work_producer;
 	private MessageProducer clean_producer;
 	
 	private Logger log = Logger.getLogger(this.getClass());
 	
 	@Inject
-	public RDPService(IRDPRepository repository, @Named("Segment") ISegmentIDGenerator idGen, IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
+	public RDPService(IRDPRepository repository, @Named("Segment") IIDGenerationService idGen, IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
 		this.repo = repository;
 		this.messFact = messFact;
 		this.idGen = idGen;

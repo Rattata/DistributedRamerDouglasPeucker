@@ -19,13 +19,13 @@ import siege.RDP.domain.IPoint;
 public class RDPRepository extends UnicastRemoteObject implements IRDPRepository {
 	private HashMap<Integer, RDPContainer<?>> store = new HashMap<>();
 
-	private IdentityGenerator rdp_ids;
-	private IdentityGenerator segment_ids;
+	private IIDGenerationService rdp_ids;
+	private IIDGenerationService segment_ids;
 
 	private transient Logger log = Logger.getLogger(RDPRepository.class);
 
 	@Inject
-	public RDPRepository(@Named("RDP") IdentityGenerator rdp_ids, @Named("Segment") IdentityGenerator segment_ids)
+	public RDPRepository(@Named("RDP") IIDGenerationService rdp_ids, @Named("Segment") IIDGenerationService segment_ids)
 			throws RemoteException {
 		this.rdp_ids = rdp_ids;
 		this.segment_ids = segment_ids;

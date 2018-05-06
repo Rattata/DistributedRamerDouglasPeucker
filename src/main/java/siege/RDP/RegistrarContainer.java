@@ -11,7 +11,7 @@ import siege.RDP.data.MessagingFactory;
 import siege.RDP.data.RMIManager;
 import siege.RDP.registrar.IRDPRepository;
 import siege.RDP.registrar.IRDPService;
-import siege.RDP.registrar.ISegmentIDGenerator;
+import siege.RDP.registrar.IIDGenerationService;
 import siege.RDP.registrar.IdentityGenerator;
 import siege.RDP.registrar.RDPRepository;
 import siege.RDP.registrar.RDPService;
@@ -37,8 +37,8 @@ public class RegistrarContainer extends AbstractModule {
 	protected void configure() {
 		bind(IRDPRepository.class).to(RDPRepository.class);
 		bind(IRDPService.class).to(RDPService.class);
-		bind(ISegmentIDGenerator.class).annotatedWith(Names.named("Segment")).toInstance(segmentGenerator);
-		bind(ISegmentIDGenerator.class).annotatedWith(Names.named("RDP")).toInstance(RDPGenerator);
+		bind(IIDGenerationService.class).annotatedWith(Names.named("Segment")).toInstance(segmentGenerator);
+		bind(IIDGenerationService.class).annotatedWith(Names.named("RDP")).toInstance(RDPGenerator);
 
 		bind(RegistrarRunner.class);
 		bind(ResultConsumer.class);

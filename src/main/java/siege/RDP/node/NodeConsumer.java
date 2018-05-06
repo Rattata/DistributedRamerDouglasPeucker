@@ -28,7 +28,7 @@ import siege.RDP.messages.RDPResult;
 import siege.RDP.messages.RDPSearch;
 import siege.RDP.messages.RDPSearchContainer;
 import siege.RDP.messages.RDPWork;
-import siege.RDP.registrar.ISegmentIDGenerator;
+import siege.RDP.registrar.IIDGenerationService;
 
 public class NodeConsumer implements IStateMachine, Serializable {
 	private transient Logger log = Logger.getLogger(NodeConsumer.class);

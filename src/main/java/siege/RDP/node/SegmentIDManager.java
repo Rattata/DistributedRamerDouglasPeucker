@@ -5,11 +5,11 @@ import java.util.Stack;
 import com.google.inject.Inject;
 
 import siege.RDP.data.RMIManager;
-import siege.RDP.registrar.ISegmentIDGenerator;
+import siege.RDP.registrar.IIDGenerationService;
 
 public class SegmentIDManager {
 	Stack<Integer> unusedIDS = new Stack<>();
-	ISegmentIDGenerator idGen;
+	IIDGenerationService idGen;
 	
 	@Inject
 	public SegmentIDManager(RMIManager rmiman) {
