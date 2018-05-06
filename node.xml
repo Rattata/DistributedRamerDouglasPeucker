@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<nodeConfig>
+    <consumers>2</consumers>
+    <searchers>2</searchers>
+    <search_segments>3</search_segments>
+    <split>125000</split>
+    <rmi_registry_port>1201</rmi_registry_port>
+</nodeConfig>
