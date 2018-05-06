@@ -22,6 +22,7 @@ public class RemoteConfig {
 	public String RMI_REGISTRAR_REGISTRAR = "REGISTRAR";
 	public String RMI_REGISTRAR_LINEREPO = "LINE_REPOSITORY";
 	public String RMI_NODE_UPDATE = "UPDATENODE";
+	public String RMI_IDGEN = "IDGEN";
 
 	public String QUEUE_WORK = "1_LINES";
 	public String QUEUE_RESULTS = "2_RESULTS";

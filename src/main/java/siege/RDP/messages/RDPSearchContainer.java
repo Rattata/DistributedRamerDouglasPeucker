@@ -15,6 +15,7 @@ public class RDPSearchContainer extends IdentifiableMessage {
 
 	public RDPSearchContainer(Line line, int parts, ExecutorService executor) {
 		this.line = line;
+		this.executor = executor;
 		int chunkSize = (int) Math.ceil(line.getPoints().size() / parts);
 		searchTasks = new ArrayList<>(parts);
 		for (int j = 0; j < parts; j++) {

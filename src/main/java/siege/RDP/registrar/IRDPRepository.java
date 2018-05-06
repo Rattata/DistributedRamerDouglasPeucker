@@ -11,14 +11,12 @@ import siege.RDP.domain.IPoint;
 public interface IRDPRepository extends Remote{
 	List<IOrderedPoint> getSegment(int RDPID, int start, int end) throws RemoteException;
 	
-	void signalExpectation(int RDPID, int segmentStartIndex) throws RemoteException;
-	
 	Double getEpsilon(int RDPID) throws RemoteException; 
 	
-	boolean finalizeExpectation(int RDPID, int segmentStartIndex, int[] segmentResultIndices);
+	boolean update(int RDPID, int SegmentID, List<Integer> newSegments, List<Integer> newResults) throws RemoteException;
 	
-	<P extends IPoint> RDPContainer<P> submit(List<P> points, double epsilon);
+	<P extends IPoint> RDPContainer<P> submit(List<P> points, double epsilon)throws RemoteException;
 	
-	void removeContainer(int RDPcontainer);
+	void removeContainer(int RDPcontainer)throws RemoteException;
 	
 }

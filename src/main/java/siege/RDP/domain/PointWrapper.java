@@ -1,6 +1,8 @@
 package siege.RDP.domain;
 
-public class PointWrapper <P extends IPoint> implements IOrderedPoint, IPoint {
+import java.io.Serializable;
+
+public class PointWrapper <P extends IPoint> implements IOrderedPoint, IPoint, Serializable {
 	/**
 	 * 
 	 */

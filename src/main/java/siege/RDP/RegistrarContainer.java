@@ -8,6 +8,8 @@ import siege.RDP.data.MessagingFactory;
 import siege.RDP.data.RMIManager;
 import siege.RDP.registrar.IRDPRepository;
 import siege.RDP.registrar.IRDPService;
+import siege.RDP.registrar.ISegmentIDGenerator;
+import siege.RDP.registrar.IdentityGenerator;
 import siege.RDP.registrar.RDPRepository;
 import siege.RDP.registrar.RDPService;
 import siege.RDP.registrar.RegistrarRunner;
@@ -23,6 +25,7 @@ public class RegistrarContainer extends AbstractModule {
 	protected void configure() {
 		bind(IRDPRepository.class).to(RDPRepository.class);
 		bind(IRDPService.class).to(RDPService.class);
+		bind(ISegmentIDGenerator.class).to(IdentityGenerator.class);
 		bind(RegistrarRunner.class);
 		bind(ResultConsumer.class);
 		bind(RMIManager.class);

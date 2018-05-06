@@ -27,7 +27,7 @@ public class RDPSearch extends IdentifiableMessage implements Callable<Void> {
 	
 	public Void call() throws Exception{
 		String identifier = Identifier(); 
-		log.info(String.format("%s search start", identifier));
+		log.debug(String.format("%s search start", identifier));
 		for(int j = start;j <= end && j < line.getPoints().size(); j++){
 			double distance = line.distance(line.getPoints().get(j));
 			if(distance > furthestDistance){
@@ -35,7 +35,7 @@ public class RDPSearch extends IdentifiableMessage implements Callable<Void> {
 				furthestIndex = j;
 			}
 		}
-		log.info(String.format("%s search finish", identifier));
+		log.debug(String.format("%s search finish", identifier));
 		return null;
 	};
 	

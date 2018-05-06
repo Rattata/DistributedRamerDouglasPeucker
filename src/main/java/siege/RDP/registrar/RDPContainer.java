@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -11,71 +12,63 @@ import java.util.stream.IntStream;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
 import siege.RDP.domain.PointWrapper;
+import siege.RDP.messages.RDPResult;
 
-public class RDPContainer <P extends IPoint> implements IRDPResultContainer {
-	
+public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
+
 	private int countOpenSegments = 0;
 	private ReentrantLock resultcountLock = new ReentrantLock();
-	
-	private ReentrantLock finalResult = new ReentrantLock();
-	
+
+	private CountDownLatch finalResult = new CountDownLatch(1);
+
 	private int id;
 	private double epsilon;
 	private List<P> points;
 	private List<IOrderedPoint> ordered;
 	private TreeMap<Integer, P> results = new TreeMap<>();
-	
-	private HashMap<Integer, Boolean> expect = new HashMap<Integer, Boolean>();
-	
-	public RDPContainer(int id, double epsilon, List<P> points){
+
+	private HashMap<Integer, Boolean> expect = new HashMap<>();
+
+	public RDPContainer(int id, double epsilon, List<P> points) {
 		this.id = id;
 		this.epsilon = epsilon;
-		ordered = IntStream.range(0, points.size())
-				.mapToObj(x -> new PointWrapper<P>(points.get(x), x))
+		ordered = IntStream.range(0, points.size()).mapToObj(x -> new PointWrapper<P>(points.get(x), x))
 				.collect(Collectors.toList());
 		this.points = points;
 		results.put(points.size() - 1, points.get(points.size() - 1));
-		expectResult(0);
-		finalResult.lock();
+		int start = 0;
+		int end = points.size() - 1;
 	}
-	
 
 	public int getId() {
 		return id;
 	}
-	
+
 	public double getEpsilon() {
 		return epsilon;
 	}
 	
-	
-	public void expectResult(int startIndex) {
-		resultcountLock.lock();
-		countOpenSegments++;
-		expect.put(startIndex, false);
-		resultcountLock.unlock();
-	}
 
 	/**
 	 * @return whether expectation was already received
 	 */
-	public boolean putResult(int segmentStartId, int[] pointIndices) {
+	public boolean putResult(int SegmentID, List<Integer> newSegments, List<Integer> newResults) {
 		resultcountLock.lock();
-		boolean expectationExists = false; 
-		if(expect.containsKey(segmentStartId)){			
-			expectationExists = true;
-			countOpenSegments--;
-			for(int index : pointIndices){
-				results.put(index, points.get(index));				
+		boolean wasHandled = false;
+		if(expect.containsKey(SegmentID)){
+			for(Integer newSegment : newSegments ){
+				expect.put(newSegment, false);
 			}
-			expect.remove(pointIndices);
-			if(countOpenSegments == 0){
-				finalResult.unlock();
+			expect.remove(SegmentID);
+			
+			for(Integer result : newResults){
+				results.put(result, points.get(result));
 			}
+			wasHandled = true;
 		}
 		resultcountLock.unlock();
-		return expectationExists;
-	}	
+		return wasHandled;
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<IOrderedPoint> getSegment(int start, int end) {
@@ -91,8 +84,11 @@ public class RDPContainer <P extends IPoint> implements IRDPResultContainer {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<P> awaitResult() {
-		finalResult.lock();
-		finalResult.unlock();
-		return getResult();		
+		try {
+			finalResult.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return getResult();
 	}
 }

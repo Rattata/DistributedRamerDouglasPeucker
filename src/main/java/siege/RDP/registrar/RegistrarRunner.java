@@ -14,14 +14,16 @@ public class RegistrarRunner implements Runnable {
 	RMIManager rmiMan;
 	IRDPRepository repo;
 	RemoteConfig remote_config;
+	ISegmentIDGenerator idGen;
 	
 	@Inject
-	public RegistrarRunner(ResultConsumer consumer, RemoteConfig remote_config, IRDPService service, RMIManager rmiMan, IRDPRepository repo) {
+	public RegistrarRunner(ResultConsumer consumer, ISegmentIDGenerator idGen, RemoteConfig remote_config, IRDPService service, RMIManager rmiMan, IRDPRepository repo) {
 		this.consumer = consumer;
 		this.service = service;
 		this.rmiMan = rmiMan;
 		this.repo = repo;
 		this.remote_config = remote_config;
+		this.idGen = idGen;
 	}
 	
 	@Override
@@ -29,6 +31,7 @@ public class RegistrarRunner implements Runnable {
 		System.setProperty("java.rmi.server.hostname",remote_config.REGISTRATION_MASTER);
 		rmiMan.RegisterRdpService( service);
 		rmiMan.RegisterRepository(repo);
+		rmiMan.RegisterIDGenerator(idGen);
 		
 		while(true){
 			consumer.execute();

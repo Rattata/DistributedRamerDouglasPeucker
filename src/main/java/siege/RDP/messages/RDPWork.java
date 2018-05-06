@@ -4,13 +4,16 @@ import java.io.Serializable;
 
 public class RDPWork extends IdentifiableMessage {
 	public int RDPId;
+	public int segmentID;
 	public int segmentStartIndex;
 	public int endIndex;
 	
-	public RDPWork(int RDPId, int segmentStartIndex, int endIndex) {
+	public RDPWork(int RDPId, int segmentID, int segmentStartIndex, int endIndex) {
 		 this.RDPId = RDPId;
+		 this.segmentID = segmentID;
 		 this.segmentStartIndex = segmentStartIndex;
 		 this.endIndex = endIndex;
+		 
 	}
 	
 	@Override

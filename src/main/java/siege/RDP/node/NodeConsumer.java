@@ -20,14 +20,15 @@ import siege.RDP.config.RemoteConfig;
 import siege.RDP.data.IMessagingFactory;
 import siege.RDP.data.IRDPCache;
 import siege.RDP.data.MessagingFactory;
+import siege.RDP.data.RMIManager;
 import siege.RDP.data.StateMachine;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.Line;
-import siege.RDP.messages.RDPExpect;
 import siege.RDP.messages.RDPResult;
 import siege.RDP.messages.RDPSearch;
 import siege.RDP.messages.RDPSearchContainer;
 import siege.RDP.messages.RDPWork;
+import siege.RDP.registrar.ISegmentIDGenerator;
 
 public class NodeConsumer implements IStateMachine, Serializable {
 	private transient Logger log = Logger.getLogger(NodeConsumer.class);
@@ -41,10 +42,12 @@ public class NodeConsumer implements IStateMachine, Serializable {
 	private transient IMessagingFactory messFact;
 	private transient RemoteConfig remote_config = new RemoteConfig();
 	private transient ExecutorService executor;
+	private SegmentIDManager idMan;
 
 	@Inject
-	public NodeConsumer(IRDPCache rdpCache, IMessagingFactory messagingFactory, ExecutorService executor,
-			NodeConfigManager confmanager) {
+	public NodeConsumer(IRDPCache rdpCache, SegmentIDManager idMan, RMIManager rmiMan,
+			IMessagingFactory messagingFactory, ExecutorService executor, NodeConfigManager confmanager) {
+		this.idMan = idMan;
 		this.rdpCache = rdpCache;
 		this.nodeConfig = confmanager.GetConfig();
 		this.executor = executor;
@@ -73,28 +76,19 @@ public class NodeConsumer implements IStateMachine, Serializable {
 				Object obj = msg.getObject();
 				if (obj instanceof RDPWork) {
 					RDPWork work = (RDPWork) obj;
-					
+
 					String identifier = work.Identifier();
-					
-					List<IOrderedPoint> segment = rdpCache.getSegment(work.RDPId, work.segmentStartIndex, work.endIndex);
-					Line line = new Line(segment);
-					
+
+					List<IOrderedPoint> segment = rdpCache.getSegment(work.RDPId, work.segmentStartIndex,
+							work.endIndex);
+					Line line = new Line(work.RDPId, work.segmentID, segment);
+
 					log.info(String.format("%s started", identifier));
 					double epsilon = rdpCache.getEpsilon(work.RDPId);
-					RDPResult rdpRes = null;
-					if(line.getPoints().size() < nodeConfig.split){
-						log.info(String.format("%s local ", identifier));
-						rdpRes = AllLocalRDP(line, epsilon, work.RDPId);
-					} else {
-						log.info(String.format("%s remote ", identifier));
-						rdpRes = SplitRemoteRDP(line, epsilon, work.RDPId);
-					}
-					log.info(String.format("%s complete ", identifier));
-					result_producer.send(messFact.createObjectMessage(rdpRes));
-					
 					msg.acknowledge();
-					log.info(String.format("%s ack ", identifier));
-					
+					RDP(line, epsilon);
+					log.info(String.format("%s complete ", identifier));
+
 				} else {
 					log.error("could not deserialize object");
 				}
@@ -107,75 +101,46 @@ public class NodeConsumer implements IStateMachine, Serializable {
 		return null;
 
 	}
-	
-	private RDPResult AllLocalRDP(Line line, double epsilon, int RDPID){
+
+	private void RDP(Line line, double epsilon) {
 		Stack<Line> work = new Stack<>();
 		work.push(line);
-		
-		ArrayList<Integer> results = new ArrayList<>();
-		
-		while(!work.isEmpty()){
+
+		while (!work.isEmpty()) {
 			Line temp = work.pop();
-			RDPSearchContainer searchContainer = new RDPSearchContainer(temp, nodeConfig.search_segments,
-					executor);
+			RDPSearchContainer searchContainer = new RDPSearchContainer(temp, nodeConfig.search_segments, executor);
 			RDPSearch result = searchContainer.submitAndAwaitResult();
-			if(result.furthestDistance > epsilon){
-				for(Line split: temp.split(result.furthestIndex)){
-					work.push(split);
-				};
+
+			List<Integer> newSegments = new ArrayList<>();
+			List<Integer> newResults = new ArrayList<>();
+			RDPWork newWork = null;
+			if (result.furthestDistance > epsilon) {
+				List<Line> newLines = temp.split(result.furthestIndex, idMan.next(), idMan.next());
+				if (temp.getPoints().size() > nodeConfig.split) {
+					newWork = new RDPWork(temp.RDPID, temp.segmentID, line.start.getIndex(), line.end.getIndex());
+					work.push(newLines.get(1));
+				} else {
+					work.push(newLines.get(0));
+					work.push(newLines.get(1));
+				}
+
 			} else {
-				results.add(temp.getPoints().get(0).getIndex());
+				newResults.add(temp.getPoints().get(0).getIndex());
 			}
-		}
-		
-		int[] resultArray = new int[results.size()];
-		IntStream.range(0, resultArray.length).map(x -> resultArray[x] = results.get(x));
-		return new RDPResult(RDPID, line.getPoints().get(0).getIndex(), resultArray);
-	}
-	
-	private RDPResult SplitRemoteRDP(Line line, double epsilon, int RDPID){
-		Stack<Line> work = new Stack<>();
-		work.push(line);
-		
-		ArrayList<Integer> results = new ArrayList<>();
-		
-		while(!work.isEmpty()){
-			Line temp = work.pop();
-			RDPSearchContainer searchContainer = new RDPSearchContainer(temp, nodeConfig.search_segments,
-					executor);
-			RDPSearch result = searchContainer.submitAndAwaitResult();
-			if(result.furthestDistance > epsilon){
-				List<Line> split = line.split(result.furthestIndex);
-				work.push(split.get(0));
-				CreateWork(split.get(1), RDPID);
-			} else {
-				results.add(temp.getPoints().get(0).getIndex());
-			}
-		}
-		
-		int[] resultArray = new int[results.size()];
-		IntStream.range(0, resultArray.length).map(x -> resultArray[x] = results.get(x));
-		return new RDPResult(RDPID, line.getPoints().get(0).getIndex(), resultArray);
-	}
-	
-	private void CreateWork(Line line, int RDPId){
-		RDPWork work = new RDPWork(
-				RDPId, 
-				line.getPoints().get(0).getIndex(), 
-				line.getPoints().get(line.getPoints().size() - 1).getIndex());
-		
-		RDPExpect expect = new RDPExpect(RDPId, line.getPoints().get(0).getIndex());
-		
-		try {
-			result_producer.send(messFact.createObjectMessage(expect));
-			log.info(String.format("%s expect", expect.Identifier()));
 			
-			work_producer.send(messFact.createObjectMessage(work));
-			log.info(String.format("%s create", work.Identifier()));
-		} catch (Exception e) {
-			e.printStackTrace();
+			RDPResult newUpdate = new RDPResult(temp.RDPID, temp.segmentID, newSegments, newResults);
+			try {
+				if(newWork != null){
+					work_producer.send(messFact.createObjectMessage(newWork));					
+				}
+				result_producer.send(messFact.createObjectMessage(newUpdate));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 	}
 	
+	
+
 }

@@ -44,7 +44,7 @@ public class DistributedTest {
 			Client client = Client.getClient();
 			IRDPService service  = client.man.getRDPService();
 			
-			List<PointImpl> n = create(1000000);
+			List<PointImpl> n = create(100000);
 			NodeConfig settings = new NodeConfig();
 			
 //			IUpdatableNode node1 = client.man.getUpdatableNode("192.168.1.61");
@@ -57,7 +57,7 @@ public class DistributedTest {
 			
 			Stopwatch w = createUnstarted();
 			w.start();
-			service.submit(n, 0.00001);
+			n = service.submit(n, 0.001);
 			
 			System.out.printf("%d -> %d\n", n.size(), w.stop().elapsed(TimeUnit.NANOSECONDS));
 		} catch (Exception e) {

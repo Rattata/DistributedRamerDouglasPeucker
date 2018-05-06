@@ -7,8 +7,7 @@ import java.util.List;
 import siege.RDP.domain.IPoint;
 
 public interface IRDPResultContainer extends Remote {
-	void expectResult(int segmentStartIndex);
-	boolean putResult(int segmentStartIndex, int[] segmentPoints);
+	boolean putResult(int SegmentID, List<Integer> newSegments, List<Integer> newResults);
 	<P extends IPoint> List<P> getResult();
 	<P extends IPoint> List<P> awaitResult();
 }

@@ -1,15 +1,21 @@
 package siege.RDP.registrar;
 
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class IdentityGenerator {
+public class IdentityGenerator extends UnicastRemoteObject implements ISegmentIDGenerator {
+
+	protected IdentityGenerator() throws RemoteException {
+	}
+
 	private int currentId = 0;
 	private ReentrantLock lock = new ReentrantLock();
 
-	public List<Integer> getRange(int number) {
+	public List<Integer> getRange(int number) throws RemoteException {
 		lock.lock();
 		List<Integer> returnIdentities = IntStream.rangeClosed(currentId, currentId + number).boxed()
 				.collect(Collectors.toList());
@@ -19,7 +25,7 @@ public class IdentityGenerator {
 
 	}
 
-	public Integer next() {
+	public Integer next(){
 		Integer retVal = null;
 		lock.lock();
 		retVal = currentId++;

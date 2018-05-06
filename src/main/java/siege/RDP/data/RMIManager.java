@@ -16,6 +16,7 @@ import siege.RDP.config.RemoteConfig;
 import siege.RDP.node.IUpdatableNode;
 import siege.RDP.registrar.IRDPRepository;
 import siege.RDP.registrar.IRDPService;
+import siege.RDP.registrar.ISegmentIDGenerator;
 
 @Singleton
 public class RMIManager {
@@ -87,6 +88,24 @@ public class RMIManager {
 		}
 		return rdpService;
 	}
+
+	public ISegmentIDGenerator getIDGen() {
+
+		ISegmentIDGenerator rdpService = null;
+		try {
+			Registry r = remotes.get(remote_cfg.REGISTRATION_MASTER);
+			if (r == null) {
+				r = LocateRegistry.getRegistry(remote_cfg.REGISTRATION_MASTER, remote_cfg.REGISTRATION_PORT);
+				remotes.put(remote_cfg.REGISTRATION_MASTER, r);
+			}
+			Remote obj = r.lookup(remote_cfg.RMI_IDGEN);
+			rdpService = (ISegmentIDGenerator) obj;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return rdpService;
+	}
+
 	
 	public IUpdatableNode getUpdatableNode(String node) {
 
@@ -137,6 +156,23 @@ public class RMIManager {
 		
 		try {
 			r.bind(remote_cfg.RMI_REGISTRAR_LINEREPO, obj);			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void RegisterIDGenerator( ISegmentIDGenerator obj) {
+		Registry r = null;
+		try {
+			r = getLocalRegistry();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			r.bind(remote_cfg.RMI_IDGEN, obj);			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

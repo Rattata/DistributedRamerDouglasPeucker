@@ -1,6 +1,8 @@
  package siege.RDP.data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.jms.Connection;
@@ -36,9 +38,10 @@ public class MessagingFactory implements IMessagingFactory {
 		try {
 			ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(remoteConfig.ACTIVEMQ_USER,
 					remoteConfig.ACTIVEMQ_PASSWORD, remoteConfig.ACTIVEMQ_URL);
+			connectionFactory.setTrustAllPackages(true);
 			Connection connection = connectionFactory.createConnection();
+			connection.start();
 			session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-			
 		} catch (Exception e) {
 			log.fatal(e);
 		}
