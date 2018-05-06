@@ -29,6 +29,7 @@ public class NodeConfigManager {
 			return (NodeConfig) unmarshal.unmarshal(config_file);
 		} catch (Exception e) {
 			log.error(e);
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -54,6 +55,7 @@ public class NodeConfigManager {
 
 		} catch (Exception e) {
 			log.error(e);
+			e.printStackTrace();
 			
 		}
 

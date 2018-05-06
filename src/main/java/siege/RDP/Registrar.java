@@ -20,19 +20,7 @@ public class Registrar implements IRDPMode
     public static void main( String[] args )
     {
 		Registrar.injector = Guice.createInjector(new RegistrarContainer(new Registrar()));
-		
-		IRDPRepository repo = Registrar.injector.getInstance(IRDPRepository.class);
-		
-		IRDPService rdpService = Registrar.injector.getInstance(RDPService.class);
-		
 		RegistrarRunner runner = Registrar.injector.getInstance(RegistrarRunner.class);
-		
-		RemoteConfig config = Registrar.injector.getInstance(RemoteConfig.class);
-		System.setProperty("java.rmi.server.hostname",config.REGISTRATION_MASTER);
-		
-		RMIManager rmiMAn = Registrar.injector.getInstance(RMIManager.class);
-		rmiMAn.RegisterRdpService( rdpService);
-		rmiMAn.RegisterRepository(repo);
 		runner.run();
     }
     @Override

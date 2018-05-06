@@ -44,6 +44,7 @@ public class CleanupConsumer implements IStateMachine {
 				message.acknowledge();
 			} catch (Exception e) {
 				log.error(e);
+				e.printStackTrace();
 			}
 		}
 		log.info("stopped");

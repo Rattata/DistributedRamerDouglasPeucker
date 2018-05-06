@@ -4,6 +4,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -20,7 +21,7 @@ import siege.RDP.config.NodeConfig;
 import siege.RDP.config.NodeConfigManager;
 import siege.RDP.data.CleanupConsumer;
 
-public class NodeRunner implements IUpdatableNode {
+public class NodeRunner extends UnicastRemoteObject implements IUpdatableNode {
 	private static final String REGISTRATION_NAME = "NodeRunner";
 	private transient Logger log = Logger.getLogger(this.getClass());
 
@@ -33,7 +34,7 @@ public class NodeRunner implements IUpdatableNode {
 	private transient List<Future<Void>> completions;
 
 	@Inject
-	public NodeRunner(NodeConfigManager configman, ExecutorService executor) {
+	public NodeRunner(NodeConfigManager configman, ExecutorService executor) throws RemoteException {
 		this.config_man = configman;
 		config = config_man.GetConfig();
 		this.executor = executor;

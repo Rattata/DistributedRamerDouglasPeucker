@@ -16,12 +16,14 @@ import siege.RDP.domain.IPoint;
 public class RDPRepository implements IRDPRepository {
 	private HashMap<Integer, RDPContainer> store = new HashMap<>();
 	
-	@Inject
-	private transient IdentityGenerator rdp_ids;
+	
+	private IdentityGenerator rdp_ids;
 	
 	private transient Logger log = Logger.getLogger(RDPRepository.class); 
 	
-	public RDPRepository() {
+	@Inject
+	public RDPRepository(IdentityGenerator rdp_ids) {
+		this.rdp_ids = rdp_ids;
 		log.info("starting RDPRepo");
 	}
 	

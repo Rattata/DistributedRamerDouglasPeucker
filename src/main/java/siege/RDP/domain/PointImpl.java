@@ -1,6 +1,8 @@
 package siege.RDP.domain;
 
-public class PointImpl implements IPoint{
+import java.io.Serializable;
+
+public class PointImpl implements IPoint, Serializable{
 	double X, Y;
 	
 	public PointImpl(double x, double y) {

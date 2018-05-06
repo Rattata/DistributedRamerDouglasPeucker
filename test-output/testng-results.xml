@@ -2,12 +2,12 @@
 <testng-results skipped="0" failed="0" total="1" passed="1">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="577" started-at="2018-05-06T15:52:59Z" finished-at="2018-05-06T15:53:00Z">
+  <suite name="Default suite" duration-ms="1704" started-at="2018-05-06T17:26:36Z" finished-at="2018-05-06T17:26:38Z">
     <groups>
     </groups>
-    <test name="Default test" duration-ms="577" started-at="2018-05-06T15:52:59Z" finished-at="2018-05-06T15:53:00Z">
+    <test name="Default test" duration-ms="1704" started-at="2018-05-06T17:26:36Z" finished-at="2018-05-06T17:26:38Z">
       <class name="siege.RDP.DistributedTest">
-        <test-method status="PASS" signature="SimpleRun()[pri:0, instance:siege.RDP.DistributedTest@573f2bb1]" name="SimpleRun" duration-ms="567" started-at="2018-05-06T17:52:59Z" finished-at="2018-05-06T17:53:00Z">
+        <test-method status="PASS" signature="SimpleRun()[pri:0, instance:siege.RDP.DistributedTest@5f375618]" name="SimpleRun" duration-ms="1691" started-at="2018-05-06T19:26:36Z" finished-at="2018-05-06T19:26:38Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- SimpleRun -->

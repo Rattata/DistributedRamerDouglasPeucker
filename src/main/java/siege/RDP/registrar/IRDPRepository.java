@@ -8,7 +8,7 @@ import java.util.List;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
 
-public interface IRDPRepository extends Remote, Serializable{
+public interface IRDPRepository extends Remote{
 	List<IOrderedPoint> getSegment(int RDPID, int start, int end) throws RemoteException;
 	
 	void signalExpectation(int RDPID, int segmentStartIndex) throws RemoteException;

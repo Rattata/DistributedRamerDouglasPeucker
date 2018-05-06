@@ -91,13 +91,8 @@ public class RDPContainer <P extends IPoint> implements IRDPResultContainer {
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<P> awaitResult() {
-		try {
-			finalResult.wait();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return getResult();
-		
+		finalResult.lock();
+		finalResult.unlock();
+		return getResult();		
 	}
 }
