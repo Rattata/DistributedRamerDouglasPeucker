@@ -9,7 +9,7 @@ import java.util.stream.IntStream;
 
 public class IdentityGenerator extends UnicastRemoteObject implements ISegmentIDGenerator {
 
-	protected IdentityGenerator() throws RemoteException {
+	public IdentityGenerator() throws RemoteException {
 	}
 
 	private int currentId = 0;
@@ -25,7 +25,7 @@ public class IdentityGenerator extends UnicastRemoteObject implements ISegmentID
 
 	}
 
-	public Integer next(){
+	public Integer next() throws RemoteException{
 		Integer retVal = null;
 		lock.lock();
 		retVal = currentId++;

@@ -1,6 +1,9 @@
 package siege.RDP;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import siege.RDP.config.RemoteConfig;
 import siege.RDP.data.IMessagingFactory;
@@ -19,13 +22,24 @@ public class RegistrarContainer extends AbstractModule {
 	IRDPMode rdp;
 	public RegistrarContainer(IRDPMode rdp) {
 		this.rdp = rdp;
+		try {
+			segmentGenerator = new IdentityGenerator();
+			RDPGenerator = new IdentityGenerator();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
+	
+	IdentityGenerator segmentGenerator;
+	IdentityGenerator RDPGenerator;
 	
 	@Override
 	protected void configure() {
 		bind(IRDPRepository.class).to(RDPRepository.class);
 		bind(IRDPService.class).to(RDPService.class);
-		bind(ISegmentIDGenerator.class).to(IdentityGenerator.class);
+		bind(ISegmentIDGenerator.class).annotatedWith(Names.named("Segment")).toInstance(segmentGenerator);
+		bind(ISegmentIDGenerator.class).annotatedWith(Names.named("RDP")).toInstance(RDPGenerator);
+
 		bind(RegistrarRunner.class);
 		bind(ResultConsumer.class);
 		bind(RMIManager.class);

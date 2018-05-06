@@ -10,32 +10,36 @@ import javax.inject.Singleton;
 
 import org.apache.log4j.Logger;
 
+import com.google.inject.name.Named;
+
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
 
 @Singleton
 public class RDPRepository extends UnicastRemoteObject implements IRDPRepository {
 	private HashMap<Integer, RDPContainer<?>> store = new HashMap<>();
-	
-	
+
 	private IdentityGenerator rdp_ids;
-	
-	private transient Logger log = Logger.getLogger(RDPRepository.class); 
-	
+	private IdentityGenerator segment_ids;
+
+	private transient Logger log = Logger.getLogger(RDPRepository.class);
+
 	@Inject
-	public RDPRepository(IdentityGenerator rdp_ids) throws RemoteException {
+	public RDPRepository(@Named("RDP") IdentityGenerator rdp_ids, @Named("Segment") IdentityGenerator segment_ids)
+			throws RemoteException {
 		this.rdp_ids = rdp_ids;
+		this.segment_ids = segment_ids;
 		log.info("starting RDPRepo");
 	}
-	
-	private RDPContainer<?> getContainer(int RDPID){
+
+	private RDPContainer<?> getContainer(int RDPID) {
 		RDPContainer<?> container = store.get(RDPID);
-		if(container == null){
+		if (container == null) {
 			log.error(String.format("container %d not found ", RDPID));
 		}
 		return container;
 	}
-	
+
 	@Override
 	public List<IOrderedPoint> getSegment(int RDPID, int start, int end) throws RemoteException {
 		RDPContainer<?> container = getContainer(RDPID);
@@ -49,10 +53,16 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 
 	@Override
 	public <P extends IPoint> RDPContainer<P> submit(List<P> points, double epsilon) {
-		int newID = rdp_ids.next();
-		RDPContainer<P> new_container = new RDPContainer<P>(newID, epsilon, points);
-		store.put(newID, new_container);
-		return new_container;
+		try {
+			int newRdpID = rdp_ids.next();
+			int newSegID = segment_ids.next();
+			RDPContainer<P> new_container = new RDPContainer<P>(newRdpID, newSegID, epsilon, points);
+			store.put(newRdpID, new_container);
+			return new_container;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	@Override
@@ -63,7 +73,7 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	@Override
 	public boolean update(int RDPID, int SegmentID, List<Integer> newSegments, List<Integer> newResults)
 			throws RemoteException {
-		return store.get(RDPID).putResult(SegmentID, newSegments, newResults);
+		return store.get(RDPID).update(SegmentID, newSegments, newResults);
 	}
 
 }

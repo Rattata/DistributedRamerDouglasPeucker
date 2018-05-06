@@ -3,6 +3,7 @@ package siege.RDP.registrar;
 import javax.inject.Singleton;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import siege.RDP.config.RemoteConfig;
 import siege.RDP.data.RMIManager;
@@ -17,7 +18,7 @@ public class RegistrarRunner implements Runnable {
 	ISegmentIDGenerator idGen;
 	
 	@Inject
-	public RegistrarRunner(ResultConsumer consumer, ISegmentIDGenerator idGen, RemoteConfig remote_config, IRDPService service, RMIManager rmiMan, IRDPRepository repo) {
+	public RegistrarRunner(ResultConsumer consumer, @Named("Segment") ISegmentIDGenerator idGen, RemoteConfig remote_config, IRDPService service, RMIManager rmiMan, IRDPRepository repo) {
 		this.consumer = consumer;
 		this.service = service;
 		this.rmiMan = rmiMan;

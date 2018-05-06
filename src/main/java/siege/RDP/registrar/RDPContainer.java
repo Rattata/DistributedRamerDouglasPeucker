@@ -16,7 +16,6 @@ import siege.RDP.messages.RDPResult;
 
 public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 
-	private int countOpenSegments = 0;
 	private ReentrantLock resultcountLock = new ReentrantLock();
 
 	private CountDownLatch finalResult = new CountDownLatch(1);
@@ -29,15 +28,14 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 
 	private HashMap<Integer, Boolean> expect = new HashMap<>();
 
-	public RDPContainer(int id, double epsilon, List<P> points) {
-		this.id = id;
+	public RDPContainer(int RDPID, int segmentID, double epsilon, List<P> points) {
+		this.id = RDPID;
 		this.epsilon = epsilon;
 		ordered = IntStream.range(0, points.size()).mapToObj(x -> new PointWrapper<P>(points.get(x), x))
 				.collect(Collectors.toList());
-		this.points = points;
+		this.points = points;  
 		results.put(points.size() - 1, points.get(points.size() - 1));
-		int start = 0;
-		int end = points.size() - 1;
+
 	}
 
 	public int getId() {
@@ -52,7 +50,7 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 	/**
 	 * @return whether expectation was already received
 	 */
-	public boolean putResult(int SegmentID, List<Integer> newSegments, List<Integer> newResults) {
+	public boolean update(int SegmentID, List<Integer> newSegments, List<Integer> newResults) {
 		resultcountLock.lock();
 		boolean wasHandled = false;
 		if(expect.containsKey(SegmentID)){
@@ -64,7 +62,12 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 			for(Integer result : newResults){
 				results.put(result, points.get(result));
 			}
+			
 			wasHandled = true;
+		}
+		
+		if(expect.isEmpty()){
+			finalResult.countDown();
 		}
 		resultcountLock.unlock();
 		return wasHandled;

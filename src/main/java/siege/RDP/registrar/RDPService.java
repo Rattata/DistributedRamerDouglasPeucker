@@ -10,6 +10,7 @@ import javax.jms.MessageProducer;
 import org.testng.log4testng.Logger;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import siege.RDP.config.RemoteConfig;
 import siege.RDP.data.IMessagingFactory;
@@ -21,17 +22,17 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 	
 	private IRDPRepository repo;
 	private IMessagingFactory messFact;
-	private IdentityGenerator idGen;
+	private ISegmentIDGenerator idGen;
 	private MessageProducer work_producer;
 	private MessageProducer clean_producer;
 	
 	private Logger log = Logger.getLogger(this.getClass());
 	
 	@Inject
-	public RDPService(IRDPRepository repository, IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
+	public RDPService(IRDPRepository repository, @Named("Segment") ISegmentIDGenerator idGen, IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
 		this.repo = repository;
 		this.messFact = messFact;
-		this.idGen = new IdentityGenerator();
+		this.idGen = idGen;
 		this.clean_producer = messFact.createTopicProducer(rconfig.TOPIC_CLEANUP);
 		this.work_producer = messFact.createMessageProducer(rconfig.QUEUE_WORK);
 	}
