@@ -12,7 +12,7 @@ import siege.RDP.data.IRDPCache;
 import siege.RDP.data.MessagingFactory;
 import siege.RDP.data.RDPCache;
 import siege.RDP.data.RMIManager;
-import siege.RDP.node.NodeConsumer;
+import siege.RDP.node.WorkConsumer;
 import siege.RDP.node.NodeRunner;
 
 public class NodeContainer extends AbstractModule {
@@ -27,7 +27,7 @@ public class NodeContainer extends AbstractModule {
 		bind(RemoteConfig.class).toInstance(RemoteConfig.ReadConfig());
 		bind(IRDPCache.class).to(RDPCache.class);
 		bind(IMessagingFactory.class).to(MessagingFactory.class);
-		bind(NodeConsumer.class);
+		bind(WorkConsumer.class);
 		bind(NodeConfigManager.class);
 		bind(RMIManager.class);
 		bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));

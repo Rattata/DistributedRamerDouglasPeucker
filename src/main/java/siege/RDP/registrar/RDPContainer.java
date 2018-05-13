@@ -9,6 +9,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.log4j.Logger;
+
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
 import siege.RDP.domain.PointWrapper;
@@ -28,12 +30,15 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 
 	private HashMap<Integer, Boolean> expect = new HashMap<>();
 
+	Logger log = Logger.getLogger(this.getClass());
+
 	public RDPContainer(int RDPID, int segmentID, double epsilon, List<P> points) {
 		this.id = RDPID;
 		this.epsilon = epsilon;
+		expect.put(segmentID, false);
 		ordered = IntStream.range(0, points.size()).mapToObj(x -> new PointWrapper<P>(points.get(x), x))
 				.collect(Collectors.toList());
-		this.points = points;  
+		this.points = points;
 		results.put(points.size() - 1, points.get(points.size() - 1));
 
 	}
@@ -45,34 +50,35 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 	public double getEpsilon() {
 		return epsilon;
 	}
-	
 
-	/**
-	 * @return whether expectation was already received
-	 */
-	public boolean update(int SegmentID, List<Integer> newSegments, List<Integer> newResults) {
+	public boolean update(int SegmentID, int ParentSegmentID, List<Integer> newSegments, List<Integer> newResults) {
+
+		// store points
+		for (Integer result : newResults) {
+			results.put(result, points.get(result));
+		}
+
 		resultcountLock.lock();
-		boolean wasHandled = false;
-		if(expect.containsKey(SegmentID)){
-			for(Integer newSegment : newSegments ){
-				expect.put(newSegment, false);
-			}
-			expect.remove(SegmentID);
-			
-			for(Integer result : newResults){
-				results.put(result, points.get(result));
-			}
-			
-			wasHandled = true;
+		manageFam(ParentSegmentID);
+		for (Integer integer : newSegments) {
+			manageFam(integer);
 		}
 		
-		if(expect.isEmpty()){
+		expect.put(SegmentID, true);
+		if(!expect.containsValue(false)){
 			finalResult.countDown();
+			return true;
 		}
 		resultcountLock.unlock();
-		return wasHandled;
+		return false;
 	}
 
+	private void manageFam(Integer index){
+		if( ( ! expect.containsKey(index) ) && index != -1){
+			expect.put(index, false);
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	public List<IOrderedPoint> getSegment(int start, int end) {
 		return new ArrayList<>(ordered.subList(start, end + 1));

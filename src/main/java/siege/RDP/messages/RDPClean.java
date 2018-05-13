@@ -8,4 +8,9 @@ public class RDPClean extends IdentifiableMessage{
 	public RDPClean(int RDPId) {
 		this.RDPId = RDPId;
 	}
+	
+	@Override
+	public String Identifier() {
+		return String.format("%d", RDPId);
+	}
 }

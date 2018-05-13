@@ -7,13 +7,19 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.jms.MessageProducer;
 
 import org.apache.log4j.Logger;
 
 import com.google.inject.name.Named;
 
+import siege.RDP.config.RemoteConfig;
+import siege.RDP.data.MessagingFactory;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
+import siege.RDP.messages.RDPClean;
+import siege.RDP.messages.RDPResult;
+import siege.RDP.messages.RDPWork;
 
 @Singleton
 public class RDPRepository extends UnicastRemoteObject implements IRDPRepository {
@@ -21,15 +27,21 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 
 	private IIDGenerationService rdp_ids;
 	private IIDGenerationService segment_ids;
+	
+	private MessagingFactory messFact;
+	private MessageProducer work_producer;
 
-	private transient Logger log = Logger.getLogger(RDPRepository.class);
+	private transient Logger log = Logger.getLogger(this.getClass());
 
 	@Inject
-	public RDPRepository(@Named("RDP") IIDGenerationService rdp_ids, @Named("Segment") IIDGenerationService segment_ids)
+	public RDPRepository(@Named("RDP") IIDGenerationService rdp_ids, @Named("Segment") IIDGenerationService segment_ids, MessagingFactory messFact, RemoteConfig rconfig)
 			throws RemoteException {
 		this.rdp_ids = rdp_ids;
+		this.messFact = messFact;
 		this.segment_ids = segment_ids;
+		this.work_producer = messFact.createMessageProducer(rconfig.QUEUE_WORK);
 		log.info("starting RDPRepo");
+		
 	}
 
 	private RDPContainer<?> getContainer(int RDPID) {
@@ -58,6 +70,14 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 			int newSegID = segment_ids.next();
 			RDPContainer<P> new_container = new RDPContainer<P>(newRdpID, newSegID, epsilon, points);
 			store.put(newRdpID, new_container);
+			
+			RDPWork work = new RDPWork(newRdpID, newSegID, -1,  0, points.size() - 1);
+			log.info(String.format("%s wrapped in work object", work.Identifier()));
+			
+			work_producer.send(messFact.createObjectMessage(work));
+			log.info(String.format("%s sent to queue", work.Identifier()));
+			
+			
 			return new_container;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -71,9 +91,8 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	}
 
 	@Override
-	public boolean update(int RDPID, int SegmentID, List<Integer> newSegments, List<Integer> newResults)
-			throws RemoteException {
-		return store.get(RDPID).update(SegmentID, newSegments, newResults);
+	public boolean update(RDPResult result) throws RemoteException {
+		return store.get(result.RDPId).update(result.SegmentID, result.ParentSegmentID, result.newSegments, result.segmentResultIndices);
 	}
 
 }

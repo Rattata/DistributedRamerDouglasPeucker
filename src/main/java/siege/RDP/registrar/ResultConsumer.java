@@ -53,7 +53,7 @@ public class ResultConsumer {
 				if (objMessage instanceof RDPResult) {
 					RDPResult result = (RDPResult) objMessage;
 					log.info(String.format("%s rcv result", result.Identifier()));
-					boolean wasExpected = rdpRepo.update(result.RDPId, result.SegmentID, result.newSegments, result.segmentResultIndices);
+					boolean wasExpected = rdpRepo.update(result);
 					log.info(String.format("%s rcv result %b", result.Identifier(), wasExpected));
 					rcv.acknowledge();
 				} else {

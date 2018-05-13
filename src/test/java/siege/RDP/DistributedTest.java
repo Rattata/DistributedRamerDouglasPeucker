@@ -44,7 +44,7 @@ public class DistributedTest {
 			Client client = Client.getClient();
 			IRDPService service  = client.man.getRDPService();
 			
-			List<PointImpl> n = create(100000);
+			List<PointImpl> n = create(40000);
 			NodeConfig settings = new NodeConfig();
 			
 //			IUpdatableNode node1 = client.man.getUpdatableNode("192.168.1.61");

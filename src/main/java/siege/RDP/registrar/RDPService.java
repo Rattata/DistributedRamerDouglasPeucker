@@ -23,35 +23,33 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 	private IRDPRepository repo;
 	private IMessagingFactory messFact;
 	private IIDGenerationService idGen;
-	private MessageProducer work_producer;
 	private MessageProducer clean_producer;
 	
 	private Logger log = Logger.getLogger(this.getClass());
 	
 	@Inject
-	public RDPService(IRDPRepository repository, @Named("Segment") IIDGenerationService idGen, IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
+	public RDPService(IRDPRepository repository, @Named("Segment") IIDGenerationService idGen,  IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
 		this.repo = repository;
 		this.messFact = messFact;
 		this.idGen = idGen;
 		this.clean_producer = messFact.createTopicProducer(rconfig.TOPIC_CLEANUP);
-		this.work_producer = messFact.createMessageProducer(rconfig.QUEUE_WORK);
 	}
 	
 	@Override
 	public <P extends IPoint> List<P> submit(List<P> points, double epsilon) throws RemoteException {
 		log.info(String.format("received %d points for filtering  with %f epsilon ", points.size(), epsilon ));
 		RDPContainer<P> container = repo.submit(points, epsilon);
-		RDPWork work = new RDPWork(container.getId(), idGen.next() ,  0, points.size() - 1);
-		log.info(String.format("%s wrapped in work object", work.Identifier()));
+		RDPWork work = new RDPWork(container.getId(), idGen.next() , -1,  0, points.size() - 1);
+		
 		try {
-			work_producer.send(messFact.createObjectMessage(work));
-			log.info(String.format("%s sent to queue", work.Identifier()));
+			
 			List<P> result = container.awaitResult();
 			log.info(String.format("%s complete", work.Identifier()));
+
 			RDPClean clean = new RDPClean(container.getId());
-			
 			log.info(String.format("%s cleanup", clean.Identifier()));
 			clean_producer.send(messFact.createObjectMessage(clean));
+			repo.removeContainer(container.getId());
 			
 			return result;
 		} catch (Exception e) {

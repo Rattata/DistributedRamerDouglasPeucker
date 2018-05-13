@@ -5,15 +5,17 @@ import java.util.List;
 
 public class RDPResult extends IdentifiableMessage {
 	public int RDPId;
+	public int ParentSegmentID;
 	public int SegmentID;
 	public List<Integer> newSegments;
 	public List<Integer> segmentResultIndices;
 	
-	public RDPResult(int RDPID, int SegmentID, List<Integer> newSegments, List<Integer> segmentResultIndices) {
+	public RDPResult(int RDPID, int SegmentID, int ParentSegmentID, List<Integer> newSegments, List<Integer> segmentResultIndices) {
 		this.RDPId = RDPID;
 		this.newSegments = newSegments;
 		this.segmentResultIndices = segmentResultIndices;
 		this.SegmentID = SegmentID;
+		this.ParentSegmentID = ParentSegmentID;
 	}
 
 	@Override

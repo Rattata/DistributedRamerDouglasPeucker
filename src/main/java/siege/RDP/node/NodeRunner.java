@@ -65,7 +65,7 @@ public class NodeRunner extends UnicastRemoteObject implements IUpdatableNode {
 		Injector inject = Node.injector;
 		stoppable = new ArrayList<>();
 		for (int i = 0; i < config.consumers; i++) {
-			NodeConsumer consumer = inject.getInstance(NodeConsumer.class);
+			WorkConsumer consumer = inject.getInstance(WorkConsumer.class);
 			stoppable.add(consumer);
 		}
 		CleanupConsumer cleanup = inject.getInstance(CleanupConsumer.class);
