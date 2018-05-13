@@ -9,6 +9,8 @@ import java.util.TreeMap;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.log4j.Logger;
+
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.registrar.IRDPRepository;
 
@@ -19,12 +21,13 @@ public class RDPCache implements IRDPCache {
 	private HashMap<Integer, Double> epsilonStore = new HashMap<>();
 
 	private IRDPRepository lineRepo;
+	private Logger log = Logger.getLogger(this.getClass());
 
 	@Inject
 	public RDPCache(RMIManager rmiMan) {
 		this.lineRepo = rmiMan.getRepository();
 	}
-	
+
 	/// get or create if RDP calculation
 	// get or create segment of RDP calculation
 	@Override
@@ -44,9 +47,8 @@ public class RDPCache implements IRDPCache {
 				for (IOrderedPoint wrap : lineRepo.getSegment(RDPID, start, end)) {
 					temp_segment.put(wrap.getIndex(), wrap);
 				}
-				;
 			} catch (Exception e) {
-				System.err.println(e.getMessage());
+				log.error(e.getMessage());
 				e.printStackTrace();
 			}
 			segment = new ArrayList<IOrderedPoint>(temp_segment.subMap(start, true, end, true).values());
@@ -54,18 +56,14 @@ public class RDPCache implements IRDPCache {
 		return segment;
 	}
 
+	
 	@Override
 	public void invalidate(int RDPID) {
 		points.remove(RDPID);
+		epsilonStore.remove(RDPID);
 	}
 
-	private static Comparator<IOrderedPoint> pointcomparator = new Comparator<IOrderedPoint>() {
-		@Override
-		public int compare(IOrderedPoint o1, IOrderedPoint o2) {
-			return o1.getIndex() - o2.getIndex();
-		}
-	};
-
+	
 	@Override
 	public double getEpsilon(int RDPID) {
 		Double epsilon = epsilonStore.get(RDPID);

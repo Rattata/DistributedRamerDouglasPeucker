@@ -29,8 +29,6 @@ public class ResultConsumer {
 		this.rdpRepo = repo;
 	}
 
-	private LinkedList<ObjectMessage> resultBuffer = new LinkedList<>();
-
 	public void execute() {
 		ObjectMessage msg = null;
 		Message rcv = null;
@@ -38,10 +36,6 @@ public class ResultConsumer {
 			rcv = expectConsumer.receive(5);
 			if (rcv != null) {
 				msg = (ObjectMessage) rcv;
-			} else {
-				if (!resultBuffer.isEmpty()) {
-					msg = resultBuffer.removeFirst();
-				}
 			}
 		} catch (Exception e) {
 			log.error(e);
@@ -52,9 +46,8 @@ public class ResultConsumer {
 				Object objMessage = msg.getObject();
 				if (objMessage instanceof RDPResult) {
 					RDPResult result = (RDPResult) objMessage;
-					log.info(String.format("%s rcv result", result.Identifier()));
-					boolean wasExpected = rdpRepo.update(result);
-					log.info(String.format("%s rcv result %b", result.Identifier(), wasExpected));
+					boolean isDone = rdpRepo.update(result);
+					log.info(String.format("%s update done: %b", result.Identifier(), isDone));
 					rcv.acknowledge();
 				} else {
 					log.error("did not recognize object from queue");
