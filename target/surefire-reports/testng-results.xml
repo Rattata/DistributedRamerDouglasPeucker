@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" total="2" passed="2">
+  <reporter-output>
+  </reporter-output>
+  <suite name="siege.RDP.DistributedTest" duration-ms="40952" started-at="2018-05-13T17:53:58Z" finished-at="2018-05-13T17:54:39Z">
+    <groups>
+    </groups>
+    <test name="Command line test" duration-ms="40952" started-at="2018-05-13T17:53:58Z" finished-at="2018-05-13T17:54:39Z">
+      <class name="siege.RDP.DistributedTest">
+        <test-method status="PASS" signature="MeasureRun()[pri:0, instance:siege.RDP.DistributedTest@39ba5a14]" name="MeasureRun" duration-ms="39317" started-at="2018-05-13T19:53:58Z" finished-at="2018-05-13T19:54:37Z">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- MeasureRun -->
+        <test-method status="PASS" signature="SimpleRun()[pri:0, instance:siege.RDP.DistributedTest@39ba5a14]" name="SimpleRun" duration-ms="1622" started-at="2018-05-13T19:54:37Z" finished-at="2018-05-13T19:54:39Z">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- SimpleRun -->
+      </class> <!-- siege.RDP.DistributedTest -->
+    </test> <!-- Command line test -->
+  </suite> <!-- siege.RDP.DistributedTest -->
+</testng-results>
