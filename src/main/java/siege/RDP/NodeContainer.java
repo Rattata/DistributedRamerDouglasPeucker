@@ -25,12 +25,12 @@ public class NodeContainer extends AbstractModule {
 	protected void configure() {
 		bind(NodeRunner.class);
 		bind(RemoteConfig.class).toInstance(RemoteConfig.ReadConfig());
-		bind(IRDPCache.class).to(RDPCache.class);
-		bind(IMessagingFactory.class).to(MessagingFactory.class);
+		bind(IRDPCache.class).to(RDPCache.class).asEagerSingleton();
+		bind(IMessagingFactory.class).to(MessagingFactory.class).asEagerSingleton();
 		bind(WorkConsumer.class);
 		bind(NodeConfigManager.class);
-		bind(RMIManager.class);
-		bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+		bind(RMIManager.class).asEagerSingleton();
+		bind(ExecutorService.class).toInstance(Executors.newWorkStealingPool(8));
 		bind(IRDPMode.class).toInstance(mode);
 	}
 		

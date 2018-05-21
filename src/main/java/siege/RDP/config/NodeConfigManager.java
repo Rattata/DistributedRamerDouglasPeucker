@@ -35,7 +35,7 @@ public class NodeConfigManager {
 	}
 
 	private File getConfigFile() {
-		String path = (new File("")).getAbsolutePath() + "\\" + node_config_filename;
+		String path = (new File(node_config_filename)).getAbsolutePath();
 		return new File(path);
 	}
 

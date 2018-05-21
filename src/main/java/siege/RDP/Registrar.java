@@ -21,8 +21,8 @@ public class Registrar implements IRDPMode
     {
 		Registrar.injector = Guice.createInjector(new RegistrarContainer(new Registrar()));
 		RegistrarRunner runner = Registrar.injector.getInstance(RegistrarRunner.class);
-		runner.run();
     }
+    
     @Override
 	public RDPMode rdpMode() {
 		return RDPMode.REGISTRAR;

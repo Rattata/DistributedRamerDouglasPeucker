@@ -32,6 +32,7 @@ public class RemoteConfig {
 
 	public static RemoteConfig ReadConfig() {
 		File config_file = getConfigFile();
+		System.out.println("reading remoteconfig from: "+ config_file.getAbsolutePath());
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(RemoteConfig.class);
 			Unmarshaller unmarshal = jaxbContext.createUnmarshaller();
@@ -44,8 +45,7 @@ public class RemoteConfig {
 	}
 
 	private static File getConfigFile() {
-		String path = (new File("")).getAbsolutePath() + "\\" + remote_config_filename;
-		File file = new File(path);
+		File file = new File(remote_config_filename);
 		if (!file.exists()) {
 			try {
 				file.createNewFile();

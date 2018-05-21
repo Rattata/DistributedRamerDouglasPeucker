@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -28,21 +30,27 @@ public class RDPCache implements IRDPCache {
 		this.lineRepo = rmiMan.getRepository();
 	}
 
+	private ReentrantLock lock = new ReentrantLock();
 	/// get or create if RDP calculation
 	// get or create segment of RDP calculation
 	@Override
 	public List<IOrderedPoint> getSegment(int RDPID, int start, int end) {
+		log.info(String.format("getSegment: %d:%d-%d", RDPID, start, end));
+		lock.lock();
 		TreeMap<Integer, IOrderedPoint> temp_segment;
 		if (points.containsKey(RDPID)) {
 			temp_segment = points.get(RDPID);
 		} else {
+			log.info(String.format("create: %d:%d-%d", RDPID, start, end));
 			temp_segment = new TreeMap<Integer, IOrderedPoint>();
 			points.put(RDPID, temp_segment);
 		}
 
 		List<IOrderedPoint> segment = new ArrayList<IOrderedPoint>(
 				temp_segment.subMap(start, true, end, true).values());
-		if (segment.size() < end - start) {
+		if (segment.size() < (end - start)) {
+			log.info(String.format("lineRepo: %d:%d-%d", RDPID, start, end));
+			
 			try {
 				for (IOrderedPoint wrap : lineRepo.getSegment(RDPID, start, end)) {
 					temp_segment.put(wrap.getIndex(), wrap);
@@ -53,9 +61,9 @@ public class RDPCache implements IRDPCache {
 			}
 			segment = new ArrayList<IOrderedPoint>(temp_segment.subMap(start, true, end, true).values());
 		}
+		lock.unlock();
 		return segment;
 	}
-
 	
 	@Override
 	public void invalidate(int RDPID) {
@@ -65,7 +73,7 @@ public class RDPCache implements IRDPCache {
 
 	
 	@Override
-	public double getEpsilon(int RDPID) {
+	public Double getEpsilon(int RDPID) {
 		Double epsilon = epsilonStore.get(RDPID);
 		if (epsilon == null) {
 			try {

@@ -2,17 +2,26 @@ package siege.RDP.node;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.IntStream;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
+import javax.jms.Queue;
+import javax.xml.soap.MessageFactory;
 
+import org.apache.activemq.ActiveMQSession;
 import org.apache.log4j.Logger;
 
 import siege.RDP.config.NodeConfig;
@@ -22,135 +31,184 @@ import siege.RDP.data.IMessagingFactory;
 import siege.RDP.data.IRDPCache;
 import siege.RDP.data.MessagingFactory;
 import siege.RDP.data.RMIManager;
-import siege.RDP.data.StateMachine;
+import siege.RDP.data.WorkSkeleton;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.Line;
 import siege.RDP.messages.RDPResult;
-import siege.RDP.messages.RDPSearch;
-import siege.RDP.messages.RDPSearchContainer;
 import siege.RDP.messages.RDPWork;
-import siege.RDP.registrar.IIDGenerationService;
+import siege.RDP.solver.SearchJob;
+import siege.RDP.solver.ChunkingSearchFactory;
 
-public class WorkConsumer implements IStateMachine, Serializable {
-	private transient Logger log = Logger.getLogger(WorkConsumer.class);
-	private transient IRDPCache rdpCache;
-	private transient StateMachine state = StateMachine.INIT;
-	private transient NodeConfig nodeConfig;
-	private transient MessageConsumer work_consumer;
-	private transient MessageProducer result_producer;
+public class WorkConsumer implements Serializable, MessageListener {
+	private Logger log = Logger.getLogger(WorkConsumer.class);
+	private IRDPCache rdpCache;
+	private NodeConfig nodeConfig;
 
-	private transient MessageProducer work_producer;
-	private transient IMessagingFactory messFact;
-	private transient RemoteConfig remote_config = new RemoteConfig();
-	private transient ExecutorService executor;
+	private ActiveMQSession jmssession;
+	private MessageProducer result_producer;
+	private MessageProducer work_producer;
+
+	private RemoteConfig remote_config = new RemoteConfig();
+	private ExecutorService executor;
 	private SegmentIDManager idMan;
 
 	@Inject
-	public WorkConsumer(IRDPCache rdpCache, SegmentIDManager idMan, RMIManager rmiMan,
-			IMessagingFactory messagingFactory, ExecutorService executor, NodeConfigManager confmanager) {
+	public WorkConsumer(IRDPCache rdpCache, SegmentIDManager idMan, RMIManager rmiMan, ExecutorService executor,
+			MessagingFactory messFact, NodeConfigManager confmanager) {
 		this.idMan = idMan;
 		this.rdpCache = rdpCache;
 		this.nodeConfig = confmanager.GetConfig();
 		this.executor = executor;
-		this.messFact = messagingFactory;
+		try {
+			this.jmssession = messFact.getSession();
+			Queue work = jmssession.createQueue(remote_config.QUEUE_WORK);
+			Queue results = jmssession.createQueue(remote_config.QUEUE_RESULTS);
 
-		this.work_consumer = messagingFactory.createMessageConsumer(remote_config.QUEUE_WORK);
-		this.result_producer = messagingFactory.createMessageProducer(remote_config.QUEUE_RESULTS);
-		this.work_producer = messagingFactory.createMessageProducer(remote_config.QUEUE_WORK);
-		this.state = StateMachine.RUN;
-		log.info("started");
-	}
-
-	@Override
-	public void stop() {
-		this.state = StateMachine.STOP;
-	}
-
-	@Override
-	public Void call() throws Exception {
-		while (state == StateMachine.RUN) {
-			try {
-				ObjectMessage msg = (ObjectMessage) work_consumer.receive(250);
-				if (msg == null) {
-					continue;
-				}
-				Object obj = msg.getObject();
-				if (obj instanceof RDPWork) {
-					RDPWork work = (RDPWork) obj;
-
-					String identifier = work.Identifier();
-
-					List<IOrderedPoint> segment = rdpCache.getSegment(work.RDPId, work.segmentStartIndex,
-							work.endIndex);
-					Line line = new Line(segment);
-
-					log.info(String.format("%s started", identifier));
-					double epsilon = rdpCache.getEpsilon(work.RDPId);
-					RDPResult result = SplitRDP(line, epsilon, work.RDPId, work.segmentID, work.parentSegmentID);
-					sendResult(result);
-					
-					msg.acknowledge();
-					log.info(String.format("%s complete ", identifier));
-
-				} else {
-					log.error("could not deserialize object");
-				}
-			} catch (Exception e) {
-				log.error(e);
-				e.printStackTrace();
-			}
+			this.result_producer = jmssession.createProducer(results);
+			this.work_producer = jmssession.createProducer(work);
+		} catch (Exception e) {
+			log.fatal(e);
+			e.printStackTrace();
 		}
-		log.info("stopped");
-		return null;
-
 	}
 
-	private RDPResult SplitRDP(Line line, double epsilon, int RDPID, int SegmentID, int ParentSegmentID){
+	public ActiveMQSession GetSession() {
+		return jmssession;
+	}
 
-		List<Integer> newSegments = new ArrayList<>();
-		List<Integer> segmentResultIndices = new ArrayList<>();
-		RDPResult result = new RDPResult(RDPID, SegmentID, ParentSegmentID, newSegments, segmentResultIndices);
-		
-		Line temp = line;
-		
-		while (temp.getPoints().size() > nodeConfig.split) {
-			
-			RDPSearchContainer searchContainer = new RDPSearchContainer(temp, nodeConfig.search_segments, executor);
-			RDPSearch search_result = searchContainer.submitAndAwaitResult();
+	@Override
+	public void onMessage(Message message) {
+		try {
+			ObjectMessage msg = (ObjectMessage) message;
 
-			if (search_result.furthestDistance > epsilon) {
+			Object obj = msg.getObject();
+			if (obj instanceof RDPWork) {
+				RDPWork work = (RDPWork) obj;
+
+				String identifier = work.Identifier();
+
+				CompletableFuture<WorkSkeleton> skeletonFuture1 = CompletableFuture
+						.supplyAsync(() -> new WorkSkeleton(message, work), executor);
 				
-				List<Line> splitlines = temp.split(search_result.furthestIndex);
-				boolean firstLarger = splitlines.get(0).getPoints().size() > splitlines.get(1).getPoints().size();
-				Line larger = null;
-				Line smaller = null;
-				if(firstLarger){
-					larger = splitlines.get(0);
-					smaller = splitlines.get(1);
-				} else {
-					larger = splitlines.get(1);
-					smaller = splitlines.get(0);
-				}
-				temp = larger;
+				CompletableFuture<WorkSkeleton> skeletonFuture2 = skeletonFuture1.thenApplyAsync((skeleton) -> skeleton.setLine(rdpCache.getSegment(skeleton.work.RDPId,
+						skeleton.work.segmentStartIndex, skeleton.work.endIndex)), executor);
+
+				CompletableFuture<WorkSkeleton> skeletonFuture3 = skeletonFuture2.thenApplyAsync(
+						(skeleton) -> skeleton.setEpsilon(rdpCache.getEpsilon(skeleton.work.RDPId)), executor);
+
 				
-				int newSegmentId = idMan.next();
-				createWork(smaller, RDPID, SegmentID, newSegmentId);
-				newSegments.add(newSegmentId);
+				skeletonFuture3.thenAccept((skeleton) -> SplitRDP(skeleton));
 				
+				CompletableFuture.supplyAsync(() -> skeletonFuture3.join(), executor );
+
 			} else {
-				segmentResultIndices.add(temp.start.getIndex());
-				break;
+				log.error("could not deserialize object");
 			}
+		} catch (Exception e) {
+			log.fatal(e);
+			e.printStackTrace();
 		}
-		RDPResult completeResult = CompleteRDP(temp, epsilon, RDPID, SegmentID, ParentSegmentID) ;
-		result.newSegments.addAll(completeResult.newSegments);
-		result.segmentResultIndices.addAll(completeResult.segmentResultIndices);
-		
-		return result;
 	}
-	
-	
-	private RDPResult CompleteRDP(Line line, double epsilon, int RDPID, int SegmentID, int ParentSegmentID){
+
+	public void exceptionally(Throwable exception) {
+		log.fatal(exception);
+		exception.printStackTrace();
+	}
+
+	private WorkSkeleton SplitRDP(WorkSkeleton skeleton) {
+		log.info(String.format("RDP: phase: split %s", skeleton.work.Identifier()));
+		Line line = skeleton.line;
+		double epsilon = skeleton.epsilon;
+		
+		RDPWork originalWork = skeleton.work;
+		int originalPartition = originalWork.partition_ancestors;
+		String oldPartitionString = skeleton.PartitionID;
+
+		int RDPID = originalWork.RDPId;
+		int SegmentID = originalWork.segmentID;
+		int ParentSegmentID = originalWork.parentSegmentID;
+
+		try {
+			List<Integer> newSegments = new ArrayList<>();
+			List<Integer> segmentResultIndices = new ArrayList<>();
+			RDPResult result = new RDPResult(RDPID, SegmentID, ParentSegmentID, newSegments, segmentResultIndices);
+			Line temp = line;
+
+			while (originalPartition++ <= nodeConfig.max_partitions) {
+				
+				ChunkingSearchFactory searchContainer = new ChunkingSearchFactory(temp, nodeConfig.search_chunk_size, nodeConfig.cores, executor);
+				
+				SearchJob search_result = searchContainer.submitAndAwaitResult();
+
+				if (search_result.furthestDistance > epsilon) {
+
+					List<Line> splitlines = temp.split(search_result.furthestIndex);
+					boolean firstLarger = splitlines.get(0).getPoints().size() > splitlines.get(1).getPoints().size();
+					Line larger = null;
+					Line smaller = null;
+					if (firstLarger) {
+						larger = splitlines.get(0);
+						smaller = splitlines.get(1);
+					} else {
+						larger = splitlines.get(1);
+						smaller = splitlines.get(0);
+					}
+					temp = larger;
+
+					int newSegmentId = idMan.next();
+
+					createWork(smaller, RDPID, SegmentID, newSegmentId, originalWork.partition_ancestors, oldPartitionString);
+					newSegments.add(newSegmentId);
+
+				} else {
+					segmentResultIndices.add(temp.start.getIndex());
+					break;
+				}
+			}
+			RDPResult completeResult = CompleteRDP(temp, epsilon, originalWork);
+			result.newSegments.addAll(completeResult.newSegments);
+			result.segmentResultIndices.addAll(completeResult.segmentResultIndices);
+
+			sendResult(result);
+
+			skeleton.originalMessage.acknowledge();
+
+		} catch (Exception e) {
+			log.fatal(e);
+			e.printStackTrace();
+		}
+		log.info(String.format("RDP: phase: done %s", skeleton.work.Identifier()));
+		return skeleton;
+	}
+
+	private void createWork(Line line, int RDPID, int newParentSegmentID, int newSegmentID, int partition_ancestors,
+			String parentPartitionString) {
+		try {
+			log.info(String.format("create work: %d:%d:&d", RDPID, newParentSegmentID, newSegmentID));
+			int new_partition_ancestors = partition_ancestors+1;
+			
+			RDPWork work = new RDPWork(RDPID, newSegmentID, newParentSegmentID, line.start.getIndex(),
+					line.end.getIndex(), new_partition_ancestors);
+
+			String partitionString = work.createNewPartitionString();
+
+			ObjectMessage msg = jmssession.createObjectMessage(work);
+			msg.setStringProperty("JMSXGroupID", partitionString);
+			
+			work_producer.send(msg);
+			log.info(String.format("created work: %d:%d:&d -> %s", RDPID, newParentSegmentID, newSegmentID, partitionString));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private RDPResult CompleteRDP(Line line, double epsilon, RDPWork originalWork) {
+
+		log.info(String.format("RDP: phase: local %s", originalWork.Identifier()));
+		int RDPID = originalWork.RDPId;
+		int SegmentID = originalWork.segmentID;
+		int ParentSegmentID = originalWork.parentSegmentID;
+
 		List<Integer> newSegments = new ArrayList<>();
 		List<Integer> segmentResultIndices = new ArrayList<>();
 		RDPResult result = new RDPResult(RDPID, SegmentID, ParentSegmentID, newSegments, segmentResultIndices);
@@ -160,8 +218,8 @@ public class WorkConsumer implements IStateMachine, Serializable {
 		while (!work.isEmpty()) {
 
 			Line temp = work.pop();
-			RDPSearchContainer searchContainer = new RDPSearchContainer(temp, nodeConfig.search_segments, executor);
-			RDPSearch search_result = searchContainer.submitAndAwaitResult();
+			ChunkingSearchFactory searchContainer = new ChunkingSearchFactory(temp, nodeConfig.search_chunk_size,nodeConfig.cores, executor);
+			SearchJob search_result = searchContainer.submitAndAwaitResult();
 
 			if (search_result.furthestDistance > epsilon) {
 				for (Line split : temp.split(search_result.furthestIndex)) {
@@ -171,30 +229,26 @@ public class WorkConsumer implements IStateMachine, Serializable {
 				segmentResultIndices.add(temp.start.getIndex());
 			}
 		}
+
+		log.info(String.format("RDP: phase: local done %s", originalWork.Identifier()));
+
 		return result;
 	}
 
-	private void createWork(Line line, int RDPID, int parentSegmentID, int SegmentID){
-		RDPWork newWork = new RDPWork(RDPID, SegmentID, parentSegmentID, line.start.getIndex(), line.end.getIndex());
-		sendWork(newWork);
-	}
-	
 	private void sendResult(RDPResult result) {
 		try {
-			result_producer.send(messFact.createObjectMessage(result));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
-	private void sendWork(RDPWork work) {
-		try {
-			work_producer.send(messFact.createObjectMessage(work));
+			log.info(String.format("RDP: sendResult %s", result.Identifier()));
+
+			ObjectMessage msg = jmssession.createObjectMessage(result);
+			result_producer.send(msg);
+
+			log.info(String.format("RDP: sentResult %s", result.Identifier()));
+
 		} catch (Exception e) {
+			log.fatal(e);
 			e.printStackTrace();
 		}
 	}
-	
-	
 
 }

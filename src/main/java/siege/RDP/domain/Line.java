@@ -11,9 +11,8 @@ public class Line {
     private double dy;
     private double sxey;
     private double exsy;
-    private  double length;
-    
-    
+    private double length;
+        
     public IOrderedPoint start;
     public IOrderedPoint end;
     
@@ -32,10 +31,7 @@ public class Line {
         length = Math.sqrt(dx*dx + dy*dy);
 	}
     
-    public Line(RDPWork work){
-    	
-    }
-	
+    
 	public double distance(IOrderedPoint p) {
         return Math.abs(dy * p.getX() - dx * p.getY() + sxey - exsy) / length;
     }

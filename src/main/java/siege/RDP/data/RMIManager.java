@@ -111,7 +111,7 @@ public class RMIManager {
 
 		IUpdatableNode rdpService = null;
 		try {
-			Registry r = remotes.get(remote_cfg.REGISTRATION_MASTER+String.valueOf(remote_cfg.NODE_UPDATE_PORT));
+			Registry r = null;
 			if (r == null) {
 				r = LocateRegistry.getRegistry(node, remote_cfg.NODE_UPDATE_PORT);
 				remotes.put(remote_cfg.REGISTRATION_MASTER+String.valueOf(remote_cfg.NODE_UPDATE_PORT), r);

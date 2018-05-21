@@ -1,6 +1,7 @@
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\PointImpl.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\IOrderedPoint.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\config\NodeConfigManager.java
+C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\ResultSkeleton.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\PointWrapper.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\node\NodeState.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\registrar\IIDGenerationService.java
@@ -9,6 +10,7 @@ C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\config\RemoteConfig.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\node\IUpdatableNode.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\MessagingFactory.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\ClientContainer.java
+C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\WorkSkeleton.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\RegistrarContainer.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\IRDPMode.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\CleanupConsumer.java
@@ -33,6 +35,7 @@ C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\RDPCache.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\config\NodeConfig.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\registrar\IdentityGenerator.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\IRDPCache.java
+C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\messages\RDPAnnounce.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\IMessagingFactory.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\RDPMode.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\IPoint.java

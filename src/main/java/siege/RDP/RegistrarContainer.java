@@ -1,5 +1,8 @@
 package siege.RDP;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
@@ -43,6 +46,7 @@ public class RegistrarContainer extends AbstractModule {
 		bind(RegistrarRunner.class);
 		bind(ResultConsumer.class);
 		bind(RMIManager.class);
+		bind(ExecutorService.class).toInstance(Executors.newWorkStealingPool(12));
 		bind(IMessagingFactory.class).to(MessagingFactory.class);
 		bind(RemoteConfig.class).toInstance(RemoteConfig.ReadConfig());
 		bind(IRDPMode.class).toInstance(rdp);

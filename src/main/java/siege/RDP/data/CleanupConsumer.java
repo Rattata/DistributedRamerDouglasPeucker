@@ -2,57 +2,56 @@ package siege.RDP.data;
 
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import javax.jms.Topic;
+import javax.jms.TopicSubscriber;
 
+import org.apache.activemq.ActiveMQSession;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
 import siege.RDP.config.RemoteConfig;
+import siege.RDP.messages.RDPAnnounce;
 import siege.RDP.messages.RDPClean;
 import siege.RDP.node.IStateMachine;
 
-public class CleanupConsumer implements IStateMachine {
+public class CleanupConsumer implements MessageListener {
 
-	private MessageConsumer consumer;
-	
-	private StateMachine state = StateMachine.INIT;
-	
 	private Logger log = Logger.getLogger(this.getClass());
-	
 	private IRDPCache cache;
+	private boolean listen_announce = false;
 	
 	@Inject
-	public CleanupConsumer(IMessagingFactory messagingFactory, RemoteConfig remote_config, IRDPCache cache){
-		consumer = messagingFactory.createTopicConsumer(remote_config.TOPIC_CLEANUP);
+	public CleanupConsumer(RemoteConfig remote_config, IRDPCache cache){
 		this.cache = cache;
-		this.state = StateMachine.RUN;
-		log.info("started");
 	}
 
+	public void setAnnounce(boolean announce) {
+		this.listen_announce = announce;
+	}
+	
 	@Override
-	public Void call() throws Exception {
-		while(state == StateMachine.RUN){
-			try {
-				Message message = consumer.receive(150);
-				if(message == null){
-					continue;
-				}
-				RDPClean clean = (RDPClean) ((ObjectMessage) message).getObject();
-				log.info(String.format("%s", clean.Identifier()));
+	public void onMessage(Message message) {
+		try {
+			ObjectMessage objectMessage = ((ObjectMessage) message);
+			Object object = objectMessage.getObject();
+			if(object instanceof RDPClean){
+				RDPClean clean = (RDPClean) objectMessage.getObject();
+				log.info(String.format("%s clean", clean.Identifier()));
 				cache.invalidate(clean.RDPId);
 				message.acknowledge();
-			} catch (Exception e) {
-				log.error(e);
-				e.printStackTrace();
+			} else if(object instanceof RDPAnnounce){
+				RDPAnnounce announce = (RDPAnnounce) objectMessage.getObject();
+				log.info(String.format("%s announce", announce.Identifier()));
+				if(listen_announce){
+					cache.getSegment(announce.RDPId, announce.start(), announce.end());
+				}
 			}
+		} catch (Exception e) {
+			log.error(e);
+			e.printStackTrace();
 		}
-		log.info("stopped");
-		return null;
-	}
-
-	@Override
-	public void stop() {
-		state = StateMachine.STOP;
 	}
 }
