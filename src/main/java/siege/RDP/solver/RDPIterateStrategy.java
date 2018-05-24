@@ -3,7 +3,6 @@ package siege.RDP.solver;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 import siege.RDP.domain.Line;
 import siege.RDP.domain.RDPIteration;

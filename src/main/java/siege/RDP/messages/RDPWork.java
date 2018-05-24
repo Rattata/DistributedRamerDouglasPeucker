@@ -31,9 +31,7 @@ public class RDPWork extends IdentifiableMessage {
 	}
 	
 	public String createNewPartitionString(){
-		Random r = new Random();
-		int randomInt = r.nextInt(2048);
-		return String.format("%d-%d", RDPId, randomInt);
+		return String.format("%d-%d", RDPId, segmentID);
 	}
 	
 	

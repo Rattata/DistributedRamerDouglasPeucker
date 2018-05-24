@@ -2,6 +2,8 @@ package siege.RDP.registrar;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.jms.MessageProducer;
@@ -20,6 +22,7 @@ import siege.RDP.config.RemoteConfig;
 import siege.RDP.data.IMessagingFactory;
 import siege.RDP.domain.IPoint;
 import siege.RDP.domain.Line;
+import siege.RDP.domain.RDPIteration;
 import siege.RDP.messages.RDPAnnounce;
 import siege.RDP.messages.RDPClean;
 import siege.RDP.messages.RDPWork;
@@ -29,7 +32,7 @@ import siege.RDP.solver.RDPIterateStrategy;
 
 public class RDPService extends UnicastRemoteObject implements IRDPService {
 	
-	private IRDPRepository repo;
+	private IRDPRepository calculationRepository;
 	private IIDGenerationService idGen;
 	private TopicPublisher announce_producer;
 	private MessageProducer work_producer;
@@ -39,7 +42,7 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 	
 	@Inject
 	public RDPService(IRDPRepository repository, ChunkingSearchFactory searchFactory, @Named("Segment") IIDGenerationService idGen,  IMessagingFactory messFact, RemoteConfig rconfig) throws RemoteException {
-		this.repo = repository;
+		this.calculationRepository = repository;
 		this.idGen = idGen;
 		this.searchFactory = searchFactory;
 		try {
@@ -62,38 +65,26 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 	@Override
 	public <P extends IPoint> List<P> submit(List<P> points, double epsilon, int partitions) throws RemoteException {
 		log.info(String.format("received %d points for filtering  with %f epsilon ", points.size(), epsilon ));
-		RDPContainer<P> container = repo.submit(points, epsilon);
 		
-		if(partitions > 0){
-			RDPIterateStrategy solver = new RDPIterateStrategy();
-			ISearchStrategy searcher = searchFactory.createSearcher( 200000, 8 );
-			for(int i = 0; i < partitions; i++){
-				solver.solve(new Line(container.GetLine()), epsilon, searcher);
-			}
-			
-		}
-		
-		RDPWork work = new RDPWork(container.getId(), container.getInitialSegmentId(), -1,  0, points.size() - 1, 0);
-		log.info(String.format("%s wrapped in work object", work.Identifier()));
+		ICalculationContainer<P> container = calculationRepository.submitCalculation(points, epsilon);
 		
 		try {
 			
-			ObjectMessage workmessage = jmssession.createObjectMessage(work);
-			workmessage.setStringProperty("JMSXGroupID", work.createNewPartitionString());
+			CreateWork(container, 2, epsilon);
 			
-			work_producer.send(workmessage);
-			log.info(String.format("%s sent to queue", work.Identifier()));
 			
-			RDPAnnounce announce = new RDPAnnounce(container.getId(), points.size());
-			announce_producer.send(jmssession.createObjectMessage(announce));
 			
+//			RDPAnnounce announce = new RDPAnnounce(container.getRDPId(), points.size());
+//			announce_producer.send(jmssession.createObjectMessage(announce));
+//			
 			List<P> result = container.awaitResult();
-			log.info(String.format("%s complete", work.Identifier()));
-
-			RDPClean clean = new RDPClean(container.getId());
+			log.info(String.format("%d complete", container.getRDPId()));
+			
+			RDPClean clean = new RDPClean(container.getRDPId());
 			log.info(String.format("%s cleanup", clean.Identifier()));
 			announce_producer.send(jmssession.createObjectMessage(clean));
-			repo.invalidate(container.getId());
+			
+			calculationRepository.invalidate(container.getRDPId());
 			
 			return result;
 		} catch (Exception e) {
@@ -101,5 +92,57 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 			log.error(e);
 			return null;
 		}		
+	}
+	
+	public <P extends IPoint>  void CreateWork(ICalculationContainer<P> container, int partition_depth, double epsilon){
+		
+		if(partition_depth > 0){
+		
+			Line inputLine = new Line(container.getLine());
+			List<Line> partitionedLines = new ArrayList<>();
+			List<Integer> partitionedResults = new ArrayList<>();
+			partitionedLines.add(inputLine);
+			
+			RDPIterateStrategy solver = new RDPIterateStrategy();
+			ISearchStrategy searcher = searchFactory.createSearcher( 200000, 8 );
+			
+			for(int i = 0; i < partition_depth; i++){
+				ArrayList<Line> templines = new ArrayList<>();
+				for(Line partition : partitionedLines.subList(0, partitionedLines.size() ) ){
+					RDPIteration iterationass = solver.solve(partition, epsilon, searcher);
+					templines.addAll(iterationass.getNewLines());
+					partitionedResults.addAll(iterationass.getResultPoints());
+				}	
+			}
+			
+			container.putResults(partitionedResults);
+			
+			for(Line line : partitionedLines){
+				int segmentID = calculationRepository.ExpectSegment(container.getRDPId(), line.getPoints());
+				sendWork(container.getRDPId(), segmentID, line.start.getIndex(), line.end.getIndex());
+			}
+			
+		} else {
+			Line completeline = new Line(container.getLine());
+			int segmentID = calculationRepository.ExpectSegment(container.getRDPId(), completeline.getPoints());
+			sendWork(container.getRDPId(), segmentID, completeline.start.getIndex(), completeline.end.getIndex());
+		}
+	}
+	
+	private void sendWork(int RDPID, int segmentId, int start, int end){
+		log.info(String.format("%d wrapped in work object", RDPID));
+		
+		RDPWork work = new RDPWork(RDPID, segmentId, -1,  start, end, 0);
+		try {
+			ObjectMessage oMessage = jmssession.createObjectMessage(work);
+			String partition = work.createNewPartitionString();
+			oMessage.setStringProperty("JMSXGroupID", partition);
+			
+			work_producer.send(oMessage);		
+			log.info(String.format("sent %d wrapped %s", RDPID,  partition));
+		} catch (Exception e) {
+			log.fatal(e);
+			e.printStackTrace();
+		}
 	}
 }

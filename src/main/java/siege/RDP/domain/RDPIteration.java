@@ -10,4 +10,13 @@ public class RDPIteration {
 		this.newLines = newLines;
 		this.resultPoints = resultPoints;
 	}
+	
+	public List<Line> getNewLines() {
+		return newLines;
+	}
+	
+	public List<Integer> getResultPoints() {
+		return resultPoints;
+	}
+	
 }

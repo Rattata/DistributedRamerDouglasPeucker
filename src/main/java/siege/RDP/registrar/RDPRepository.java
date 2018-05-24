@@ -31,7 +31,7 @@ import siege.RDP.messages.RDPWork;
 
 @Singleton
 public class RDPRepository extends UnicastRemoteObject implements IRDPRepository {
-	private HashMap<Integer, RDPContainer<?>> store = new HashMap<>();
+	private HashMap<Integer, ICalculationContainer<?>> store = new HashMap<>();
 
 	private IIDGenerationService rdp_ids;
 	private IIDGenerationService segment_ids;
@@ -51,8 +51,8 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 		
 	}
 
-	private RDPContainer<?> getContainer(int RDPID) {
-		RDPContainer<?> container = store.get(RDPID);
+	private ICalculationContainer<?> getContainer(int RDPID) {
+		ICalculationContainer<?> container = store.get(RDPID);
 		if (container == null) {
 			log.error(String.format("container %d not found ", RDPID));
 		}
@@ -62,7 +62,7 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	@Override
 	public List<IOrderedPoint> getSegment(int RDPID, int start, int end) throws RemoteException {
 		log.info(String.format("getSegment: %d:%d-%d", RDPID, start, end));
-		RDPContainer<?> container = getContainer(RDPID);
+		ICalculationContainer<?> container = getContainer(RDPID);
 		return container.getSegment(start, end);
 	}
 
@@ -73,11 +73,10 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	}
 
 	@Override
-	public <P extends IPoint> RDPContainer<P> submit(List<P> points, double epsilon) {
+	public <P extends IPoint> ICalculationContainer<P> submitCalculation(List<P> points, double epsilon) {
 		try {
 			int newRdpID = rdp_ids.next();
-			int newSegID = segment_ids.next();
-			RDPContainer<P> new_container = new RDPContainer<P>(newRdpID, newSegID, epsilon, points);
+			ICalculationContainer<P> new_container = new RDPContainer<P>(newRdpID, epsilon, points);
 			store.put(newRdpID, new_container);
 			return new_container;
 		} catch (Exception e) {
@@ -90,7 +89,7 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	
 	@Override
 	public void update(RDPResult result, Message message) throws RemoteException {
-		RDPContainer<?> container = store.get(result.RDPId);
+		ICalculationContainer<?> container = store.get(result.RDPId);
 		
 		CompletableFuture<ResultSkeleton> updateFuture = CompletableFuture.completedFuture(new ResultSkeleton( message, result,container));
 		
@@ -109,7 +108,7 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 
 	
 	private ResultSkeleton setResult(ResultSkeleton skeleton){
-		skeleton.container.setResults(skeleton.originalResult.segmentResultIndices);
+		skeleton.container.putResults(skeleton.originalResult.segmentResultIndices);
 		return skeleton;
 	}
 	
@@ -124,4 +123,19 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	public void invalidate(int RDPID) throws RemoteException {
 		store.remove(RDPID);
 	}
+
+	@Override
+	public int ExpectSegment(int RDPID, List<IOrderedPoint> segment) {
+		int newSegmentID = 0;
+		try {
+			newSegmentID = segment_ids.next();
+			store.get(RDPID).Expect(newSegmentID);
+		} catch (RemoteException e) {
+			log.fatal(e);
+			e.printStackTrace();
+		}
+		return newSegmentID;
+	}
+	
+	
 }

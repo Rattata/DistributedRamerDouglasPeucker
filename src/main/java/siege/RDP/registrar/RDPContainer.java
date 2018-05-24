@@ -17,14 +17,13 @@ import siege.RDP.domain.IPoint;
 import siege.RDP.domain.PointWrapper;
 import siege.RDP.messages.RDPResult;
 
-public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
+public class RDPContainer<P extends IPoint> implements ICalculationContainer<P> {
 
 	private ReentrantLock resultcountLock = new ReentrantLock();
 	private ReentrantLock resultTreeLock = new ReentrantLock();
 	private CountDownLatch finalResult = new CountDownLatch(1);
 
 	private int RDPId;
-	private int initialSegmentId;
 	private double epsilon;
 	private List<P> points;
 	private List<IOrderedPoint> ordered;
@@ -35,33 +34,24 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 
 	Logger log = Logger.getLogger(this.getClass());
 	
-	public RDPContainer(int RDPID, int segmentID, double epsilon, List<P> points) {
+	public RDPContainer(int RDPID, double epsilon, List<P> points) {
 		this.RDPId = RDPID;
 		this.epsilon = epsilon;
-		this.initialSegmentId = segmentID;
 		expect = new HashMap<>(40);
-		expect.put(segmentID, false);
 		ordered = IntStream.range(0, points.size()).mapToObj(x -> new PointWrapper<P>(points.get(x), x))
 				.collect(Collectors.toList());
 		this.points = points;
 		results = new TreeMap<>();
 
 		results.put(points.size() - 1, points.get(points.size() - 1));
-
 	}
 
-	public int getId() {
-		return RDPId;
-	}
-	
-	public List<IOrderedPoint> GetLine(){
-		return ordered;
-	}
 	
 	public double getEpsilon() {
 		return epsilon;
 	}
 
+	@Override
 	public boolean update(int SegmentID, int ParentSegmentID, List<Integer> newSegments) {
 		log.info(String.format("received update: %d:%d", SegmentID, ParentSegmentID));
 		resultcountLock.lock();
@@ -100,9 +90,6 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 		return new ArrayList<>(ordered.subList(start, end + 1));
 	}
 	
-	public int getInitialSegmentId() {
-		return initialSegmentId;
-	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -125,7 +112,7 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 	}
 
 	@Override
-	public void setResults(List<Integer> newResults) {
+	public void putResults(List<Integer> newResults) {
 		log.info(String.format("received result"));
 		
 		resultTreeLock.lock();
@@ -136,4 +123,20 @@ public class RDPContainer<P extends IPoint> implements IRDPResultContainer {
 		log.info(String.format("completed result update"));
 		
 	}
+	
+	@Override
+	public void Expect(int segmentID){
+		expect.put(segmentID, false);
+	}
+
+	@Override
+	public List<IOrderedPoint> getLine() {
+		return ordered;
+	}
+
+	@Override
+	public int getRDPId() {
+		return RDPId;
+	}
+
 }

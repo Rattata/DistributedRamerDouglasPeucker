@@ -25,10 +25,11 @@ public class ChunkingSearchFactory {
 		this.executor = executor;
 	}
 
-	
 	public ISearchStrategy createSearcher(int chunk_size, int max_chunks) {
 		return new ChunkingSearch(max_chunks, chunk_size, executor);
 	}
-	
+
+
+
 	
 }
