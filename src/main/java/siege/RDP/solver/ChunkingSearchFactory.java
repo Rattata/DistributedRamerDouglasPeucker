@@ -1,19 +1,9 @@
 package siege.RDP.solver;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
-
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.log4j.Logger;
 
-import siege.RDP.domain.Line;
-import siege.RDP.messages.IdentifiableMessage;
+import com.google.inject.Inject;
 
 public class ChunkingSearchFactory {
 
@@ -21,6 +11,7 @@ public class ChunkingSearchFactory {
 	private Logger log = Logger.getLogger(this.getClass());
 
 
+	@Inject
 	public ChunkingSearchFactory( ExecutorService executor) {
 		this.executor = executor;
 	}

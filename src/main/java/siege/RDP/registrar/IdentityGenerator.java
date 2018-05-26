@@ -9,6 +9,11 @@ import java.util.stream.IntStream;
 
 public class IdentityGenerator extends UnicastRemoteObject implements IIDGenerationService {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6559343097729598580L;
+
 	public IdentityGenerator() throws RemoteException {
 	}
 

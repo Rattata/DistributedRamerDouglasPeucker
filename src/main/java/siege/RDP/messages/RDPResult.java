@@ -1,9 +1,12 @@
 package siege.RDP.messages;
 
-import java.io.Serializable;
 import java.util.List;
 
 public class RDPResult extends IdentifiableMessage {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -781145430929939467L;
 	public int RDPId;
 	public int ParentSegmentID;
 	public int SegmentID;

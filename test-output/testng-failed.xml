@@ -5,7 +5,7 @@
     <classes>
       <class name="siege.RDP.DistributedTest">
         <methods>
-          <include name="MeasureRun"/>
+          <include name="SimpleRun"/>
         </methods>
       </class> <!-- siege.RDP.DistributedTest -->
     </classes>

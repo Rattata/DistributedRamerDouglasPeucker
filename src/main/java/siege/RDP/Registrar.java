@@ -3,11 +3,6 @@ package siege.RDP;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import siege.RDP.config.RemoteConfig;
-import siege.RDP.data.RMIManager;
-import siege.RDP.registrar.IRDPRepository;
-import siege.RDP.registrar.IRDPService;
-import siege.RDP.registrar.RDPService;
 import siege.RDP.registrar.RegistrarRunner;
 
 /**

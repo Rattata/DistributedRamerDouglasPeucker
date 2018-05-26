@@ -3,8 +3,6 @@ package siege.RDP.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-import siege.RDP.messages.RDPWork;
-
 public class Line {
 	
 	private double dx;
@@ -44,7 +42,7 @@ public class Line {
 		ArrayList<Line> wrappers = new ArrayList<>();
 		Line old = new Line(getPoints().subList(0, index + 1));
 		wrappers.add(old);
-		Line newer = new Line(getPoints().subList(index, getPoints().size() - 1));
+		Line newer = new Line(getPoints().subList(index, getPoints().size()));
 		wrappers.add(newer);
 		return wrappers;
 	}

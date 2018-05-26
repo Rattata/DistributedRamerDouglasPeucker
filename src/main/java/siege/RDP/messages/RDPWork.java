@@ -1,8 +1,10 @@
 package siege.RDP.messages;
 
-import java.util.Random;
-
 public class RDPWork extends IdentifiableMessage {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1634619331626222859L;
 	public int RDPId;
 	public int parentSegmentID;
 	public int segmentID;
@@ -10,10 +12,10 @@ public class RDPWork extends IdentifiableMessage {
 	public int endIndex;
 	public int partition_ancestors;
 	
-	public RDPWork(int RDPId, int segmentID, int parentSegmentID, int segmentStartIndex, int endIndex, int partition_ancestors) {
+	public RDPWork(int RDPId, int segmentID, int parentSegmentID, int startIndex, int endIndex, int partition_ancestors) {
 		 this.RDPId = RDPId;
 		 this.segmentID = segmentID;
-		 this.segmentStartIndex = segmentStartIndex;
+		 this.segmentStartIndex = startIndex;
 		 this.endIndex = endIndex;
 		 this.parentSegmentID = parentSegmentID;
 		 this.partition_ancestors = partition_ancestors;
@@ -21,8 +23,8 @@ public class RDPWork extends IdentifiableMessage {
 	}
 	
 	@Override
-	public String Identifier(){
-		return String.format("%d:%d:%d", RDPId, parentSegmentID, segmentID);
+	public String toString(){
+		return String.format("%d:%d:%d\t\t%d-%d", RDPId, parentSegmentID, segmentID, segmentStartIndex, endIndex);
 	}
 	
 	public int getPartitionID(String partition){

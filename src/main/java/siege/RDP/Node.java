@@ -1,8 +1,5 @@
 package siege.RDP;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionHandler;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -16,7 +13,6 @@ public class Node implements IRDPMode {
 		Node.injector = Guice.createInjector(new NodeContainer(new Node()));
 		NodeRunner runner = Node.injector.getInstance(NodeRunner.class);
 		RMIManager remoteMan = Node.injector.getInstance(RMIManager.class);
-		ExecutorService executor = Node.injector.getInstance(ExecutorService.class);
 		
 		
 		remoteMan.RegisterUpdatableNode(runner);

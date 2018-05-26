@@ -11,26 +11,23 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-
-import org.apache.activemq.ActiveMQSession;
 import org.apache.log4j.Logger;
 
 import com.google.inject.name.Named;
 
 import siege.RDP.config.RemoteConfig;
-import siege.RDP.data.MessagingFactory;
 import siege.RDP.data.ResultSkeleton;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
-import siege.RDP.messages.RDPClean;
 import siege.RDP.messages.RDPResult;
-import siege.RDP.messages.RDPWork;
 
 @Singleton
 public class RDPRepository extends UnicastRemoteObject implements IRDPRepository {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8543188005557291666L;
+
 	private HashMap<Integer, ICalculationContainer<?>> store = new HashMap<>();
 
 	private IIDGenerationService rdp_ids;
@@ -90,7 +87,7 @@ public class RDPRepository extends UnicastRemoteObject implements IRDPRepository
 	@Override
 	public void update(RDPResult result, Message message) throws RemoteException {
 		ICalculationContainer<?> container = store.get(result.RDPId);
-		
+		log.info(String.format("received update: %d:%d", result.RDPId, result.SegmentID));
 		CompletableFuture<ResultSkeleton> updateFuture = CompletableFuture.completedFuture(new ResultSkeleton( message, result,container));
 		
 		updateFuture.thenApplyAsync((xskelet) -> setResult(xskelet), executor);

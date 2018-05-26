@@ -3,18 +3,11 @@ package siege.RDP.node;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Future;
-
 import javax.inject.Inject;
-import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
 import javax.jms.Queue;
-import javax.jms.QueueBrowser;
 import javax.jms.Topic;
 
-import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.log4j.Logger;
 
@@ -28,25 +21,30 @@ import siege.RDP.data.CleanupConsumer;
 import siege.RDP.data.MessagingFactory;
 
 public class NodeRunner extends UnicastRemoteObject implements IUpdatableNode {
-	
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6625654181215125876L;
+
 	private transient Logger log = Logger.getLogger(this.getClass());
 
 	private transient NodeConfigManager config_man;
 	private transient NodeConfig config;
 	private RemoteConfig remote_conf = new RemoteConfig();
 	private MessagingFactory messFact;
-private CleanupConsumer cleanupJob;
 	private transient ArrayList<ActiveMQSession> sessions = new ArrayList<>();
+
 	@Inject
-	public NodeRunner(NodeConfigManager configman, CleanupConsumer cleanupJob, MessagingFactory messFact) throws RemoteException {
+	public NodeRunner(NodeConfigManager configman, CleanupConsumer cleanupJob, MessagingFactory messFact)
+			throws RemoteException {
 		this.config_man = configman;
 		config = config_man.GetConfig();
 		this.messFact = messFact;
-		this.cleanupJob = cleanupJob;
 		try {
 			ActiveMQSession session = messFact.getSession();
 			Topic cleanuptopic = session.createTopic(remote_conf.TOPIC_CLEANUP);
-			session.createSubscriber(cleanuptopic).setMessageListener(cleanupJob);			
+			session.createSubscriber(cleanuptopic).setMessageListener(cleanupJob);
 		} catch (Exception e) {
 			log.fatal(e);
 			e.printStackTrace();
@@ -59,7 +57,6 @@ private CleanupConsumer cleanupJob;
 		log.info(update.toString());
 		this.config = update;
 		config_man.WriteConfig(update);
-		cleanupJob.setAnnounce(this.config.useAnnounce);
 		start();
 	}
 
@@ -80,9 +77,8 @@ private CleanupConsumer cleanupJob;
 			e.printStackTrace();
 		}
 		log.info("started");
-	} 
+	}
 
-	
 	private void stop() {
 		log.info("stop");
 		try {

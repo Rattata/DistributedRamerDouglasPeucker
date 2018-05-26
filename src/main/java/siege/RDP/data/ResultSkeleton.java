@@ -4,7 +4,6 @@ import javax.jms.Message;
 
 import siege.RDP.messages.RDPResult;
 import siege.RDP.registrar.ICalculationContainer;
-import siege.RDP.registrar.RDPContainer;
 
 public class ResultSkeleton {
 	public RDPResult originalResult;

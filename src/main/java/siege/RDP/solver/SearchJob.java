@@ -10,6 +10,10 @@ import siege.RDP.domain.Line;
 import siege.RDP.messages.IdentifiableMessage;
 
 public class SearchJob extends IdentifiableMessage implements Callable<SearchResult> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2191706176151277115L;
 	public Line line;
 	public int start;
 	public int end;

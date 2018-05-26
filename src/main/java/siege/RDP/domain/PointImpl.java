@@ -3,6 +3,10 @@ package siege.RDP.domain;
 import java.io.Serializable;
 
 public class PointImpl implements IPoint, Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7821158289024549129L;
 	double X, Y;
 	
 	public PointImpl(double x, double y) {

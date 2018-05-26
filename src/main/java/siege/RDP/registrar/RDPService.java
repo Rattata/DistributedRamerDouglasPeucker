@@ -3,7 +3,6 @@ package siege.RDP.registrar;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.jms.MessageProducer;
@@ -23,7 +22,6 @@ import siege.RDP.data.IMessagingFactory;
 import siege.RDP.domain.IPoint;
 import siege.RDP.domain.Line;
 import siege.RDP.domain.RDPIteration;
-import siege.RDP.messages.RDPAnnounce;
 import siege.RDP.messages.RDPClean;
 import siege.RDP.messages.RDPWork;
 import siege.RDP.solver.ChunkingSearchFactory;
@@ -32,6 +30,10 @@ import siege.RDP.solver.RDPIterateStrategy;
 
 public class RDPService extends UnicastRemoteObject implements IRDPService {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6506962405976544706L;
 	private IRDPRepository calculationRepository;
 	private IIDGenerationService idGen;
 	private TopicPublisher announce_producer;
@@ -57,65 +59,31 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 		}
 	}
 	
-	@Override
-	public <P extends IPoint> List<P> submit(List<P> points, double epsilon) throws RemoteException {
-		return submit(points, epsilon, 0);
-	}
-
-	@Override
-	public <P extends IPoint> List<P> submit(List<P> points, double epsilon, int partitions) throws RemoteException {
-		log.info(String.format("received %d points for filtering  with %f epsilon ", points.size(), epsilon ));
-		
-		ICalculationContainer<P> container = calculationRepository.submitCalculation(points, epsilon);
-		
-		try {
-			
-			CreateWork(container, 2, epsilon);
-			
-			
-			
-//			RDPAnnounce announce = new RDPAnnounce(container.getRDPId(), points.size());
-//			announce_producer.send(jmssession.createObjectMessage(announce));
-//			
-			List<P> result = container.awaitResult();
-			log.info(String.format("%d complete", container.getRDPId()));
-			
-			RDPClean clean = new RDPClean(container.getRDPId());
-			log.info(String.format("%s cleanup", clean.Identifier()));
-			announce_producer.send(jmssession.createObjectMessage(clean));
-			
-			calculationRepository.invalidate(container.getRDPId());
-			
-			return result;
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e);
-			return null;
-		}		
-	}
-	
-	public <P extends IPoint>  void CreateWork(ICalculationContainer<P> container, int partition_depth, double epsilon){
+	public <P extends IPoint>  void CreateWork(ICalculationContainer<P> container, int partition_depth, double epsilon) throws RemoteException{
 		
 		if(partition_depth > 0){
-		
-			Line inputLine = new Line(container.getLine());
+			
 			List<Line> partitionedLines = new ArrayList<>();
-			List<Integer> partitionedResults = new ArrayList<>();
+			Line inputLine = new Line(container.getLine());
 			partitionedLines.add(inputLine);
 			
+			List<Integer> partitionedResults = new ArrayList<>();
+
 			RDPIterateStrategy solver = new RDPIterateStrategy();
-			ISearchStrategy searcher = searchFactory.createSearcher( 200000, 8 );
+			ISearchStrategy searcher = searchFactory.createSearcher( 20000, 8 );
 			
 			for(int i = 0; i < partition_depth; i++){
-				ArrayList<Line> templines = new ArrayList<>();
-				for(Line partition : partitionedLines.subList(0, partitionedLines.size() ) ){
+				List<Line> templines = new ArrayList<>();
+				for(Line partition : partitionedLines ){
 					RDPIteration iterationass = solver.solve(partition, epsilon, searcher);
 					templines.addAll(iterationass.getNewLines());
 					partitionedResults.addAll(iterationass.getResultPoints());
-				}	
+				}
+				partitionedLines = templines;
 			}
 			
 			container.putResults(partitionedResults);
+			log.info(String.format("%d Already solved %d points", container.getRDPId(), partitionedResults.size()));
 			
 			for(Line line : partitionedLines){
 				int segmentID = calculationRepository.ExpectSegment(container.getRDPId(), line.getPoints());
@@ -128,7 +96,7 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 			sendWork(container.getRDPId(), segmentID, completeline.start.getIndex(), completeline.end.getIndex());
 		}
 	}
-	
+
 	private void sendWork(int RDPID, int segmentId, int start, int end){
 		log.info(String.format("%d wrapped in work object", RDPID));
 		
@@ -144,5 +112,37 @@ public class RDPService extends UnicastRemoteObject implements IRDPService {
 			log.fatal(e);
 			e.printStackTrace();
 		}
+	}
+	
+	@Override
+	public <P extends IPoint> List<P> submit(List<P> points, double epsilon) throws RemoteException {
+		return submit(points, epsilon, 0);
+	}
+	
+	@Override
+	public <P extends IPoint> List<P> submit(List<P> points, double epsilon, int partitions) throws RemoteException {
+		log.info(String.format("received %d points for filtering  with %f epsilon ", points.size(), epsilon ));
+		
+		ICalculationContainer<P> container = calculationRepository.submitCalculation(points, epsilon);
+		
+		try {
+			
+			CreateWork(container, partitions, epsilon);
+			
+			List<P> result = container.awaitResult();
+			log.info(String.format("%d complete", container.getRDPId()));
+			
+			RDPClean clean = new RDPClean(container.getRDPId());
+			log.info(String.format("%s cleanup", clean.Identifier()));
+			announce_producer.send(jmssession.createObjectMessage(clean));
+			
+			calculationRepository.invalidate(container.getRDPId());
+			
+			return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error(e);
+			return null;
+		}		
 	}
 }

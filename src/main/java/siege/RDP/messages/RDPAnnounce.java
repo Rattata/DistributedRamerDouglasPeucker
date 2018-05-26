@@ -1,8 +1,10 @@
 package siege.RDP.messages;
 
-import java.io.Serializable;
-
 public class RDPAnnounce extends IdentifiableMessage{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 765768673755173180L;
 	public int RDPId;
 	int length;
 	

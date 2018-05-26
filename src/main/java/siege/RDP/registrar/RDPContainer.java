@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -15,7 +14,6 @@ import org.apache.log4j.Logger;
 import siege.RDP.domain.IOrderedPoint;
 import siege.RDP.domain.IPoint;
 import siege.RDP.domain.PointWrapper;
-import siege.RDP.messages.RDPResult;
 
 public class RDPContainer<P extends IPoint> implements ICalculationContainer<P> {
 
@@ -72,7 +70,7 @@ public class RDPContainer<P extends IPoint> implements ICalculationContainer<P> 
 			return true;
 		}
 		resultcountLock.unlock();
-		log.info(String.format("completed update: %d:%d", SegmentID, ParentSegmentID));
+		log.info(String.format("completed update: %d:%d:%d", RDPId, SegmentID, ParentSegmentID));
 		
 		return false;
 	}
@@ -85,13 +83,11 @@ public class RDPContainer<P extends IPoint> implements ICalculationContainer<P> 
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public List<IOrderedPoint> getSegment(int start, int end) {
 		return new ArrayList<>(ordered.subList(start, end + 1));
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<P> getResult() {
 		resultTreeLock.lock();
@@ -100,7 +96,6 @@ public class RDPContainer<P extends IPoint> implements ICalculationContainer<P> 
 		return returnresults;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<P> awaitResult() {
 		try {
@@ -113,15 +108,11 @@ public class RDPContainer<P extends IPoint> implements ICalculationContainer<P> 
 
 	@Override
 	public void putResults(List<Integer> newResults) {
-		log.info(String.format("received result"));
-		
 		resultTreeLock.lock();
 		for (Integer result : newResults) {
 			results.put(result, points.get(result));
 		}
 		resultTreeLock.unlock();
-		log.info(String.format("completed result update"));
-		
 	}
 	
 	@Override

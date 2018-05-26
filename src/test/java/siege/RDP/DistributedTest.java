@@ -1,16 +1,12 @@
 package siege.RDP;
 
 import java.io.BufferedWriter;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-
-import javax.jms.JMSException;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -29,11 +25,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 
 public class DistributedTest {
 
@@ -44,7 +36,12 @@ public class DistributedTest {
 			Client client = Client.getClient();
 			IRDPService service = client.man.getRDPService();
 
-			List<PointImpl> n = create(1000000);
+			List<PointImpl> n = create(4000000);
+			int i = 0 ;
+//			for (PointImpl pointImpl : n) {
+//				
+//				System.out.println(String.format("[%d, %f, %f]\t", i++, pointImpl.getX(), pointImpl.getY()));
+//			}
 			NodeConfig settings = new NodeConfig();
 			settings.consumers = 2;
 			settings.search_chunk_size = 25000;
@@ -60,7 +57,7 @@ public class DistributedTest {
 
 			Stopwatch w = createUnstarted();
 			w.start();
-			n = service.submit(n, 0.001);
+			n = service.submit(n, 20, 2);
 
 			System.out.printf("%d -> %d\n", n.size(), w.stop().elapsed(TimeUnit.NANOSECONDS));
 		} catch (Exception e) {
@@ -187,12 +184,8 @@ public class DistributedTest {
 		// (30x - x^2) * cos(2pi/ 0.5 * x) - 30
 		Random r = new Random();
 		List<PointImpl> points = new ArrayList<PointImpl>();
-		double delta = 30 / (double) numberOfPoints;
 		for (int j = 0; j < numberOfPoints; j++) {
-			float rf = r.nextFloat();
-			double i = j * delta;
-			double y = ((60 * rf) * i - Math.pow(i, 2)) * Math.cos((2 * Math.PI) * i) - (60 * rf);
-			points.add(new PointImpl(j, y));
+			points.add(new PointImpl(r.nextFloat() * 60, r.nextFloat() * 60));
 		}
 		return points;
 	}

@@ -7,6 +7,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class NodeConfig implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2876208556394982860L;
+	
 	public int consumers = 1;
 	public int rmi_registry_port = 1201;
 	public int max_partitions = 1;

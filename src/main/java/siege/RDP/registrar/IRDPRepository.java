@@ -22,6 +22,6 @@ public interface IRDPRepository extends Remote, IRDPCache{
 	 * @param segment
 	 * @return segmentID
 	 */
-	int ExpectSegment(int RDPID, List<IOrderedPoint> segment);
+	int ExpectSegment(int RDPID, List<IOrderedPoint> segment) throws RemoteException;
 	
 }

@@ -5,4 +5,5 @@
     <max_partitions>2</max_partitions>
     <search_chunk_size>25000</search_chunk_size>
     <cores>8</cores>
+    <useAnnounce>false</useAnnounce>
 </nodeConfig>

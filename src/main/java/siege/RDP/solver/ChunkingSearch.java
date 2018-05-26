@@ -54,7 +54,7 @@ public class ChunkingSearch implements ISearchStrategy {
 				return topResult;
 
 			} else {
-				return new SearchJob(line, line.start.getIndex(), line.end.getIndex()).call();
+				return new SearchJob(line, 0, line.getPoints().size() - 1).call();
 			}
 		} catch (Exception e) {
 			log.fatal(e);
