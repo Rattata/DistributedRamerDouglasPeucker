@@ -4,10 +4,7 @@ siege\RDP\solver\SearchJob.class
 siege\RDP\solver\ISearchFactory.class
 siege\RDP\registrar\ICalculationContainer.class
 siege\RDP\solver\ISearchStrategy.class
-siege\RDP\solver\IRDPstrategy.class
-siege\RDP\solver\RDPIterateStrategy.class
 siege\RDP\solver\ChunkingSearchFactory.class
-siege\RDP\solver\RDPCompleteStrategy.class
 siege\RDP\domain\RDPIteration.class
 siege\RDP\messages\RDPAnnounce.class
 siege\RDP\data\ResultSkeleton.class

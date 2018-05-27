@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <nodeConfig>
-    <consumers>1</consumers>
-    <search_segments>3</search_segments>
-    <split>225000</split>
+    <consumers>2</consumers>
     <rmi_registry_port>1201</rmi_registry_port>
-    <max_partitions>2</max_partitions>
+    <max_partitions>50000</max_partitions>
+    <search_chunk_size>10000</search_chunk_size>
+    <cores>4</cores>
+    <useAnnounce>true</useAnnounce>
 </nodeConfig>

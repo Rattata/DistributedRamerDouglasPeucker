@@ -1,5 +1,4 @@
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\PointImpl.java
-C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\solver\IRDPstrategy.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\IOrderedPoint.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\PointWrapper.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\solver\RDPIterateStrategy.java
@@ -22,16 +21,17 @@ C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\domain\IPoint.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\messages\RDPClean.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\registrar\IRDPRepository.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\registrar\RDPRepository.java
-C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\node\SegmentIDManager.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\registrar\RDPContainer.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\config\NodeConfigManager.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\ResultSkeleton.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\node\NodeState.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\registrar\IIDGenerationService.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\config\RemoteConfig.java
+C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\solver\IRDPsolvingStrategy.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\solver\ISearchFactory.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\MessagingFactory.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\ClientContainer.java
+C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\data\WorkSkeleton.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\IRDPMode.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\solver\ChunkingSearch.java
 C:\Users\siege\parallelism3\RDP\src\main\java\siege\RDP\node\NodeRunner.java

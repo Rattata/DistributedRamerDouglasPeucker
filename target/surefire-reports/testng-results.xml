@@ -2,16 +2,16 @@
 <testng-results skipped="0" failed="0" total="2" passed="2">
   <reporter-output>
   </reporter-output>
-  <suite name="siege.RDP.DistributedTest" duration-ms="40952" started-at="2018-05-13T17:53:58Z" finished-at="2018-05-13T17:54:39Z">
+  <suite name="siege.RDP.DistributedTest" duration-ms="2445" started-at="2018-05-26T21:01:04Z" finished-at="2018-05-26T21:01:06Z">
     <groups>
     </groups>
-    <test name="Command line test" duration-ms="40952" started-at="2018-05-13T17:53:58Z" finished-at="2018-05-13T17:54:39Z">
+    <test name="Command line test" duration-ms="2445" started-at="2018-05-26T21:01:04Z" finished-at="2018-05-26T21:01:06Z">
       <class name="siege.RDP.DistributedTest">
-        <test-method status="PASS" signature="MeasureRun()[pri:0, instance:siege.RDP.DistributedTest@39ba5a14]" name="MeasureRun" duration-ms="39317" started-at="2018-05-13T19:53:58Z" finished-at="2018-05-13T19:54:37Z">
+        <test-method status="PASS" signature="MeasureRun()[pri:0, instance:siege.RDP.DistributedTest@340f438e]" name="MeasureRun" duration-ms="565" started-at="2018-05-26T23:01:04Z" finished-at="2018-05-26T23:01:04Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- MeasureRun -->
-        <test-method status="PASS" signature="SimpleRun()[pri:0, instance:siege.RDP.DistributedTest@39ba5a14]" name="SimpleRun" duration-ms="1622" started-at="2018-05-13T19:54:37Z" finished-at="2018-05-13T19:54:39Z">
+        <test-method status="PASS" signature="SimpleRun()[pri:0, instance:siege.RDP.DistributedTest@340f438e]" name="SimpleRun" duration-ms="1869" started-at="2018-05-26T23:01:04Z" finished-at="2018-05-26T23:01:06Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- SimpleRun -->
